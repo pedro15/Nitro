@@ -53,10 +53,9 @@ namespace Nitro.FSM
         }
 
         /// <summary>
-        /// 
+        /// Executes the fsm with the given command
         /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
+        /// <returns>Returns true if the transition goes correctly otherwise false</returns>
         public bool MoveNext(T command)
         {
             CommandTransition<K, T> transition = new CommandTransition<K, T>(CurrentState, command);
