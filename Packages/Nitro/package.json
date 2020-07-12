@@ -7,12 +7,12 @@
   },
   "keywords": [
     "utility",
-    "security", 
-	"object pool",
-	"pooling",
-	"serialization",
-	"singleton",
-	"toolbox"
+    "security",
+    "object pool",
+    "pooling",
+    "serialization",
+    "singleton",
+    "toolbox"
   ],
   "name": "com.pedro15.nitro",
   "repository": {
@@ -20,6 +20,6 @@
     "url": "your-repo-url-here"
   },
   "unity": "2018.4",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "type": "library"
 }
