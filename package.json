@@ -1,0 +1,25 @@
+{
+  "displayName": "Nitro",
+  "category": "Some category",
+  "description": "Boost your game development with Nitro librarys.",
+  "author": {
+    "name": "Pedro Duran"
+  },
+  "keywords": [
+    "utility",
+    "security", 
+	"object pool",
+	"pooling",
+	"serialization",
+	"singleton",
+	"toolbox"
+  ],
+  "name": "com.pedro15.nitro",
+  "repository": {
+    "type": "git",
+    "url": "your-repo-url-here"
+  },
+  "unity": "2018.4",
+  "version": "1.0.1",
+  "type": "library"
+}
