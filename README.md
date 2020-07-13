@@ -1,10 +1,4 @@
-﻿# Nitro
-Utility toolbox to boost your unity game development.
+﻿
+![Nitro](Logo.png)
 
-## Features
-
-- Serialization and escription
-- Command based State Machine
-- Object Pooling
-- Singleton Pattern (MonoSingleton)
-- Uility classes and more!
+## Utility toolbox to boost your unity game development.
