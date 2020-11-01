@@ -5,14 +5,17 @@ namespace Nitro.Pooling
     /// <summary>
     /// Extention methods for gameObject for easy use API
     /// </summary>
-    public static class ObjectPoolingExtentions
+    public static class ObjectPoolExtentions
     {
         /// <summary>
         /// Recycle the gameObject to the Object Pool if available
         /// </summary>
         public static void Recycle(this GameObject go)
         {
-            RecyclerManager.Instance.RecycleGameObject(go);
+            PoolManager.Instance.RecycleGameObject(go);
+
+            
+
         }
         
         /// <summary>
@@ -20,7 +23,16 @@ namespace Nitro.Pooling
         /// </summary>
         public static bool IsOnPool( this GameObject go)
         {
-            return RecyclerManager.Instance.IsOnPool(go.GetInstanceID());
+            return PoolManager.Instance.IsOnObjectPool(go);
+        }
+
+        /// <summary>
+        /// Gets the associated recyclebin to this gameObject
+        /// </summary>
+        /// <returns>returns null if the gameObject is not associated to any ObjectPool</returns>
+        public static RecycleBin GetRecycleBin(this GameObject go)
+        {
+            return PoolManager.Instance.GetRecycleBin(go);
         }
     }
 }

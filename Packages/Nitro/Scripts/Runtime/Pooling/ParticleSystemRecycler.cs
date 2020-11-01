@@ -7,7 +7,7 @@ namespace Nitro.Pooling
     /// Component for Auto Stopping/Playing ParticleSystems when is on a Object Pool
     /// </summary>
     [AddComponentMenu("GoRecycler/ParticleSystem Recycler")]
-    public class ParticleSystemRecycler : MonoBehaviour, IPooled
+    public class ParticleSystemRecycler : MonoBehaviour
     {
         /// <summary>
         /// Should Autoplay on Spawn ?
@@ -18,11 +18,19 @@ namespace Nitro.Pooling
         [SerializeField,Tooltip("0 = no TimeOut")]
         public float TimeOut = 0;
 
-        ParticleSystem particles;
+        private ParticleSystem particles = null;
 
         private void Awake()
         {
             particles = GetComponent<ParticleSystem>();
+            RecycleBin.OnRecycle += OnRecycle;
+            RecycleBin.OnSpawn += OnSpawn;
+        }
+
+        private void OnDestroy()
+        {
+            RecycleBin.OnRecycle -= OnRecycle;
+            RecycleBin.OnSpawn -= OnSpawn;
         }
 
         private void OnEnable()
@@ -37,12 +45,12 @@ namespace Nitro.Pooling
         {
             yield return new WaitForSeconds(TimeOut);
             gameObject.Recycle();
-            StopCoroutine(KillParticles());
+            yield break;
         }
 
-        public void OnRecycle()
+        public void OnRecycle(GameObject obj, string recyclebin)
         {
-            if (particles != null)
+            if (ReferenceEquals(gameObject,obj) && particles != null)
             {
                 particles.Stop();
                 ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
@@ -50,9 +58,9 @@ namespace Nitro.Pooling
             }
         }
 
-        public void OnSpawn()
+        public void OnSpawn(GameObject obj, string recyclebin)
         {
-            if (AutoPlay && particles != null)
+            if (ReferenceEquals(gameObject,obj) && AutoPlay && particles != null)
             {
                 particles.Play();
                 ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
