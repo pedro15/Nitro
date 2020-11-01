@@ -9,7 +9,7 @@ namespace Nitro.Utility
     /// <typeparam name="T">Class</typeparam>
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        private static T eInstance;
+        private static T eInstance = null;
 
         protected virtual bool Persistent
         {
@@ -37,19 +37,22 @@ namespace Nitro.Utility
             }
         }
 
-        protected virtual void Awake()
+        protected virtual bool RegisterSingleton()
         {
             if (Instance != null && Instance != this)
             {
                 Destroy(this);
+                return false;
             }
 
             if (Persistent)
             {
                 DontDestroyOnLoad(gameObject);
             }
-            eInstance = GetComponent<T>();
-        }
 
+            eInstance = this as T;
+
+            return true;
+        }
     }
 }
