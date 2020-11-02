@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Pool
   m_EditorClassIdentifier: 
   poolData:
-  - Label: Balloon
+  - Label: Hola
     referenceType: 2
     Prefab: {fileID: 0}
     assetReference:
@@ -21,6 +21,6 @@ MonoBehaviour:
       m_SubObjectName: 
     assetlabelReference:
       m_LabelString: 
-    MaxItems: 0
-    PreallocateCount: 0
+    MaxItems: 62
+    PreallocateCount: 104
     UsePoolParent: 1

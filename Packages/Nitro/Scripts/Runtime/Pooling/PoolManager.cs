@@ -5,7 +5,7 @@ using Nitro.Utility;
 
 namespace Nitro.Pooling
 {
-    [AddComponentMenu("Nitro/Pool Manager")]
+    [AddComponentMenu("Nitro/Object Pool/Pool Manager")]
     public class PoolManager : MonoSingleton<PoolManager>
     {
         public delegate void OnInitDelegate();
@@ -18,7 +18,7 @@ namespace Nitro.Pooling
         protected override bool Persistent => persistent;
 
         [SerializeField]
-        private PreloadPool predefinedPool = default;
+        private PoolDefinition predefinedPool = default;
 
         public bool IsInitialized { get; private set; } = false;
 
@@ -55,25 +55,20 @@ namespace Nitro.Pooling
                         switch (current_data.referenceType)
                         {
                             case PoolReferenceType.PREFAB:
-                                current = new RecycleBin(current_data.Label, current_data.Prefab, current_data.MaxItems
-                                    , current_data.PreallocateCount, null, current_data.UsePoolParent);
+                                current = new RecycleBin(current_data.Label, current_data.Prefab, current_data.MaxItems,
+                                    current_data.PreallocateCount, null, current_data.UsePoolParent);
                                 break;
-                            case PoolReferenceType.ASSET_REFERENCE:
 #if ADDRESSABLES_INSTALLED
+                            case PoolReferenceType.ASSET_REFERENCE:
                                 current = new RecycleBin(current_data.Label, current_data.assetReference,
                                     current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent);
-#else 
-                                goto case PoolReferenceType.PREFAB;
-#endif
                                 break;
+
                             case PoolReferenceType.LABEL_REFERENCE:
-#if ADDRESSABLES_INSTALLED
                                 current = new RecycleBin(current_data.Label, current_data.assetlabelReference,
                                     current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent);
-#else 
-                                goto case PoolReferenceType.PREFAB;
-#endif
                                 break;
+#endif
                             default: goto case PoolReferenceType.PREFAB;
                         }
 
@@ -82,13 +77,10 @@ namespace Nitro.Pooling
                         yield return current.FillPool();
                     }
                 }
-                yield return new WaitForSeconds(0.3f);
-                Debug.Log($"[{GetType().Name}] ObjectPool initialization finished");
+                yield return new WaitForEndOfFrame();
+                Debug.Log($"[{GetType().Name}] Initialization finished");
                 IsInitialized = true;
                 if (OnInit != null) OnInit.Invoke();
-            }else
-            {
-                Debug.LogError("SINGLETON INVALID!!");
             }
         }
 
@@ -167,6 +159,5 @@ namespace Nitro.Pooling
         {
             return runtimeRecycleBins.ContainsKey(poolkey);
         }
-
     }
 }
