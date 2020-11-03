@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Pool
   m_EditorClassIdentifier: 
   poolData:
-  - Label: Hola
+  - Label: Ball8
     referenceType: 2
     Prefab: {fileID: 0}
     assetReference:
-      m_AssetGUID: 
+      m_AssetGUID: 0f3389e84ceb5d544b144ed69a572657
       m_SubObjectName: 
     assetlabelReference:
-      m_LabelString: 
-    MaxItems: 62
-    PreallocateCount: 104
+      m_LabelString: balls
+    MaxItems: 100
+    PreallocateCount: 100
     UsePoolParent: 1

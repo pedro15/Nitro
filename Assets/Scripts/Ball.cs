@@ -1,18 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Nitro.Pooling;
 
-public class Ball : MonoBehaviour
+namespace Nitro.Demo.ObjectPool
 {
-    // Start is called before the first frame update
-    void Start()
+    public class Ball : MonoBehaviour
     {
-        
-    }
+        [SerializeField]
+        private int HitsToRecycle = 2;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public int _hits = 0;
+        private void OnEnable()
+        {
+            _hits = 0;
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (collision.gameObject.CompareTag("Finish"))
+                _hits++;
+
+            if (_hits >= HitsToRecycle) gameObject.Recycle();
+        }
     }
 }

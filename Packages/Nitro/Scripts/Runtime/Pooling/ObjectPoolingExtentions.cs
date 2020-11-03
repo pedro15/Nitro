@@ -12,10 +12,16 @@ namespace Nitro.Pooling
         /// </summary>
         public static void Recycle(this GameObject go)
         {
-            PoolManager.Instance.RecycleGameObject(go);
+            if (!go) return;
 
-            
-
+            if (PoolManager.Instance != null)
+                PoolManager.Instance.RecycleGameObject(go);
+            else
+            {
+                Debug.LogWarning($"[Nitro] {typeof(PoolManager).Name} is Null. Destroying the object instead of recycling it. " + 
+                    $"Please Make sure that you have an instance of '{typeof(PoolManager).Name}' in your scene");
+                Object.Destroy(go);
+            }
         }
         
         /// <summary>
