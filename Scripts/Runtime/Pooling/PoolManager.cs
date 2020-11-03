@@ -28,9 +28,11 @@ namespace Nitro.Pooling
 
         private IEnumerator Start()
         {
-            IsInitialized = false;
             if (RegisterSingleton())
             {
+
+                yield return new WaitForSeconds(5f);
+
                 Debug.Log("INIT! POOL !", this);
                 if (predefinedPool != null && predefinedPool.poolData.Length > 0)
                 {
@@ -74,7 +76,10 @@ namespace Nitro.Pooling
 
                         runtimeRecycleBins.Add(current.Label, current);
                         Debug.Log("Init pool " + i);
+
                         yield return current.FillPool();
+
+                        Debug.Log($"Pool {current.Label} Initialization finished!");
                     }
                 }
                 yield return new WaitForEndOfFrame();
@@ -84,17 +89,21 @@ namespace Nitro.Pooling
             }
         }
 
+
         public GameObject Spawn(string key, Vector3 position, Quaternion rotation)
         {
-            RecycleBin recycleBin = GetRecycleBin(key);
-            if (recycleBin != null)
+            if (runtimeRecycleBins.ContainsKey(key))
             {
-                GameObject clone = recycleBin.Spawn(position, rotation);
+                RecycleBin Rb;
+                if (runtimeRecycleBins.TryGetValue(key , out Rb ))
+                {
+                    GameObject clone = Rb.Spawn(position, rotation);
+                    if (clone != null && !ObjectPoolData.ContainsKey(clone))
+                        ObjectPoolData.Add(clone, key);
 
-                if (clone != null && !ObjectPoolData.ContainsKey(clone))
-                    ObjectPoolData.Add(clone, key);
-
-                return clone;
+                    return clone;
+                }
+                return null;
             }else
             {
                 Debug.LogError($"[{GetType().Name}] key not found: " + key);
@@ -118,6 +127,8 @@ namespace Nitro.Pooling
 
         public RecycleBin GetRecycleBin(GameObject obj)
         {
+            if (!obj) return null;
+
             string rid;
             if (ObjectPoolData.TryGetValue(obj, out rid))
                 return runtimeRecycleBins[rid];
