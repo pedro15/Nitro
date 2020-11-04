@@ -7,7 +7,7 @@ namespace Nitro.Pooling
     /// Component for Auto Stopping/Playing ParticleSystems when is on a Object Pool
     /// </summary>
     [AddComponentMenu("GoRecycler/ParticleSystem Recycler")]
-    public class ParticleSystemRecycler : MonoBehaviour
+    public class ParticleSystemRecycler : MonoBehaviour,IPoolCallbacks
     {
         /// <summary>
         /// Should Autoplay on Spawn ?
@@ -23,14 +23,6 @@ namespace Nitro.Pooling
         private void Awake()
         {
             particles = GetComponent<ParticleSystem>();
-            RecycleBin.OnRecycle += OnRecycle;
-            RecycleBin.OnSpawn += OnSpawn;
-        }
-
-        private void OnDestroy()
-        {
-            RecycleBin.OnRecycle -= OnRecycle;
-            RecycleBin.OnSpawn -= OnSpawn;
         }
 
         private void OnEnable()
@@ -48,24 +40,18 @@ namespace Nitro.Pooling
             yield break;
         }
 
-        public void OnRecycle(GameObject obj, string recyclebin)
+        public void OnSpawn()
         {
-            if (ReferenceEquals(gameObject,obj) && particles != null)
-            {
-                particles.Stop();
-                ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
-                for (int i = 0; i < childparticles.Length; i++) childparticles[i].Stop();
-            }
+            if (AutoPlay) particles.Play();
+            ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
+            for (int i = 0; i < childparticles.Length; i++) childparticles[i].Play();
         }
 
-        public void OnSpawn(GameObject obj, string recyclebin)
+        public void OnRecycle()
         {
-            if (ReferenceEquals(gameObject,obj) && AutoPlay && particles != null)
-            {
-                particles.Play();
-                ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
-                for (int i = 0; i < childparticles.Length; i++) childparticles[i].Play();
-            }
+            if (particles.isPlaying) particles.Stop();
+            ParticleSystem[] childparticles = particles.GetComponentsInChildren<ParticleSystem>();
+            for (int i = 0; i < childparticles.Length; i++) childparticles[i].Stop();
         }
     }
 }
