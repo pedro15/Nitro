@@ -15,12 +15,6 @@ namespace Nitro.Pooling
     [System.Serializable]
     public sealed class RecycleBin
     {
-        public delegate void RecycleBinDelegate(GameObject obj, string recyclebinLabel);
-
-        public static event RecycleBinDelegate OnSpawn;
-
-        public static event RecycleBinDelegate OnRecycle;
-
         #region Fields
 
         public string Label { get { return label; } }
@@ -70,6 +64,8 @@ namespace Nitro.Pooling
         [System.NonSerialized]
         private Stack<GameObject> PooledObjects = new Stack<GameObject>();
 
+        private Dictionary<GameObject, IPoolCallbacks[]> Callbacksdb = new Dictionary<GameObject, IPoolCallbacks[]>();
+
         #endregion
 
 #if ADDRESSABLES_INSTALLED
@@ -101,7 +97,7 @@ namespace Nitro.Pooling
             Reset();
         }
 #endif
-        public RecycleBin(string _label , GameObject _prefab ,int _MaxItems ,int _preallocateCount = 0 ,
+        public RecycleBin(string _label, GameObject _prefab, int _MaxItems, int _preallocateCount = 0,
             Transform _parent = null, bool _forcePoolParent = true)
         {
             label = _label;
@@ -165,23 +161,26 @@ namespace Nitro.Pooling
                 bool done = false;
                 if (referenceType == PoolReferenceType.LABEL_REFERENCE)
                 {
-                    Addressables.LoadResourceLocationsAsync(Prefabs_label.labelString).Completed +=
-                        (AsyncOperationHandle<IList<IResourceLocation>> locations) =>
-                        {
-                            prefab_locations = locations.Result.ToList();
-                            Addressables.LoadAssetsAsync<GameObject>(locations , null).Completed +=
-                                (AsyncOperationHandle<IList<GameObject>> handle) =>
-                                {
-                                    done = true;
-                                };
-                        };
-                }else if (referenceType == PoolReferenceType.ASSET_REFERENCE)
+                    var load_resouces = Addressables.LoadResourceLocationsAsync(Prefabs_label.labelString, typeof(GameObject));
+
+                    yield return new WaitUntil(() => load_resouces.IsDone);
+
+                    prefab_locations = load_resouces.Result.ToList();
+
+                    var load_process = Addressables.LoadAssetsAsync<GameObject>(prefab_locations, null);
+
+                    yield return new WaitUntil(() => load_process.IsDone);
+
+                    done = true;
+
+                }
+                else if (referenceType == PoolReferenceType.ASSET_REFERENCE)
                 {
-                    Addressables.LoadAssetAsync<GameObject>(Prefab_ref).Completed +=
-                        (AsyncOperationHandle<GameObject> handle) =>
-                        {
-                            done = true;
-                        };
+                    var load_prefab = Addressables.LoadAssetAsync<GameObject>(Prefab_ref);
+
+                    yield return new WaitUntil(() => load_prefab.IsDone);
+
+                    done = true;
                 }
                 else
                 {
@@ -216,13 +215,13 @@ namespace Nitro.Pooling
                 PooledObjects.Clear();
             else PooledObjects = new Stack<GameObject>();
         }
-        
+
         /// <summary>
         /// Recycles an object to the object pool
         /// </summary>
         /// <param name="InstanceId">Instance id of the object</param>
-        
-        public void Recycle(GameObject go )
+
+        public void Recycle(GameObject go)
         {
             if (!go)
             {
@@ -232,7 +231,15 @@ namespace Nitro.Pooling
 
             if (go != null && !PooledObjects.Contains(go))
             {
-                if (OnRecycle != null) OnRecycle.Invoke(go, Label);
+                if (Callbacksdb.TryGetValue(go, out IPoolCallbacks[] callbacks))
+                {
+                    foreach (IPoolCallbacks poolCallbacks in callbacks)
+                        poolCallbacks.OnRecycle();
+                }else
+                {
+
+                }
+
                 go.SetActive(false);
                 go.transform.position = Vector3.zero;
                 PooledObjects.Push(go);
@@ -257,7 +264,9 @@ namespace Nitro.Pooling
                 if (other != null)
                 {
                     other.transform.SetPositionAndRotation(Position, Rotation);
-                    if (OnSpawn != null) OnSpawn.Invoke(other, label);
+
+                    InvokeCallbacks(other, (IPoolCallbacks cc) => cc.OnSpawn());
+
                     return other;
                 }
                 else return null;
@@ -289,7 +298,9 @@ namespace Nitro.Pooling
                 if (other != null)
                 {
                     other.transform.SetPositionAndRotation(Position, Rotation);
-                    if (OnSpawn != null) OnSpawn.Invoke(other, label);
+
+                    InvokeCallbacks(other, (IPoolCallbacks cc) => cc.OnSpawn());
+
                     return other;
                 }
                 else return null;
@@ -306,7 +317,7 @@ namespace Nitro.Pooling
         /// <param name="destroyObjects"></param>
         public void ClearRecycleBin(bool destroyObjects = false)
         {
-            while (PooledObjects != null  && PooledObjects.Count > 0 )
+            while (PooledObjects != null && PooledObjects.Count > 0)
             {
                 GameObject obj = PooledObjects.Pop();
                 if (destroyObjects)
@@ -315,18 +326,39 @@ namespace Nitro.Pooling
                     _objectCount--;
                 }
             }
+            Callbacksdb.Clear();
         }
 
-#endregion
+        #endregion
 
-#region Private API 
-        
+        #region Private API 
+
+        private void InvokeCallbacks(GameObject other, System.Action<IPoolCallbacks> invocation)
+        {
+            if (Callbacksdb.TryGetValue(other, out IPoolCallbacks[] callbacks))
+            {
+                foreach (IPoolCallbacks poolCallbacks in callbacks)
+                {
+                    if (invocation != null) invocation.Invoke(poolCallbacks);
+                }
+            }
+        }
+
+        private void AddToCallbacksIfQualifyed(GameObject obj)
+        {
+            if (!obj) return;
+
+            IPoolCallbacks[] callbacks = obj.GetComponents<IPoolCallbacks>();
+            if (callbacks != null && callbacks.Length > 0 && !Callbacksdb.ContainsKey(obj))
+                Callbacksdb.Add(obj, callbacks);
+        }
+
         /// <summary>
         /// Returns a GameObject from object pool and enables it
         /// </summary>
         /// <param name="pos">New Position</param>
         /// <param name="rot">New Rotation</param>
-        private GameObject GetFromPool(Vector3 pos , Quaternion rot )
+        private GameObject GetFromPool(Vector3 pos, Quaternion rot)
         {
             if (PooledObjects.Count > 0)
             {
@@ -335,10 +367,11 @@ namespace Nitro.Pooling
                 g.transform.rotation = rot;
                 g.SetActive(true);
 
-                if (OnSpawn != null) OnSpawn.Invoke(g,Label);
+                InvokeCallbacks(g, (IPoolCallbacks cc) => cc.OnSpawn());
+
                 return g;
             }
-            return null; 
+            return null;
         }
 
 #if !ADDRESSABLES_INSTALLED
@@ -373,23 +406,31 @@ namespace Nitro.Pooling
         /// Creates the prefab clone and adds it to the Object Pool
         /// </summary>
         /// <returns>Prefab clone Task</returns>
-        internal async Task<GameObject> RegisterPrefabAsync (bool recycle = true)
+        internal async Task<GameObject> RegisterPrefabAsync(bool recycle = true)
         {
+            void RegistrationPostProcess(GameObject clone)
+            {
+                clone.transform.SetParent(PoolParent);
+                if (recycle) Recycle(clone);
+                _objectCount++;
+                AddToCallbacksIfQualifyed(clone);
+            }
+
             switch (referenceType)
             {
                 case PoolReferenceType.PREFAB:
-                    
+
                     if (!Prefab)
                     {
                         Debug.LogError($"[{GetType().Name}] Prefab is null on pool: '{Label}'");
-                        return await new Task<GameObject>(() => null);
+                        return null;
                     }
                     break;
                 case PoolReferenceType.ASSET_REFERENCE:
                     if (!Prefab_ref.RuntimeKeyIsValid())
                     {
                         Debug.LogError($"[{GetType().Name}] Asset reference does not contain any valid key on pool: '{Label}'");
-                        return await new Task<GameObject>(() => null);
+                        return null;
                     }
                     break;
 
@@ -398,7 +439,7 @@ namespace Nitro.Pooling
                     if (!Prefabs_label.RuntimeKeyIsValid())
                     {
                         Debug.LogError($"[{GetType().Name}] Asset label reference does not cotain any valid key on pool: {label}");
-                        return await new Task<GameObject>(() => null);
+                        return null;
                     }
                     break;
                 default: goto case PoolReferenceType.PREFAB;
@@ -410,64 +451,47 @@ namespace Nitro.Pooling
                 {
                     PoolParent = new GameObject($"Pool :: {Label}").transform;
                     PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                    PoolParent.SetParent(PoolManager.Instance.transform);
                 }
 
-                object key = null;
+                AsyncOperationHandle<GameObject> _process = default;
 
                 switch (referenceType)
                 {
                     case PoolReferenceType.PREFAB:
+                        GameObject clone = Object.Instantiate(Prefab, Vector3.zero, Quaternion.identity);
+                        RegistrationPostProcess(clone);
+                        return clone;
 
-                        key = Prefab;
-
-                        break;
                     case PoolReferenceType.ASSET_REFERENCE:
 
-                        key = Prefab_ref;
+                        _process = Addressables.InstantiateAsync(Prefab_ref, Vector3.zero, Quaternion.identity);
 
                         break;
 
                     case PoolReferenceType.LABEL_REFERENCE:
 
-                        key = prefab_locations[Random.Range(0, prefab_locations.Count)];
+                        IResourceLocation key = prefab_locations[Random.Range(0, prefab_locations.Count)];
+
+                        _process = Addressables.InstantiateAsync(key, Vector3.zero, Quaternion.identity);
 
                         break;
                     default: goto case PoolReferenceType.PREFAB;
                 }
-
-                if (key == null)
-                {
-                    Debug.LogError($"[{GetType().Name}] - {Label} | Null Object Pool Key. Prefab Missing?");
-                    throw new System.ArgumentNullException($"[{GetType().Name}] - {Label} | Null key");
-                }
-
-                var _process = Addressables.InstantiateAsync(key, Vector3.zero, Quaternion.identity, PoolParent);
 
                 System.Action<AsyncOperationHandle<GameObject>> Handler = null;
 
                 Handler = (AsyncOperationHandle<GameObject> handle) =>
                 {
                     GameObject clone = handle.Result;
-
-                    if (PoolParent != null && PoolParent.gameObject.scene.IsValid())
-                    {
-                        clone.transform.SetParent(PoolParent);
-                    }else
-                    {
-                        PoolParent = (new GameObject(label + "-PoolParent")).transform;
-                        PoolParent.transform.SetParent(PoolManager.Instance.transform);
-                        clone.transform.SetParent(PoolParent);
-                    }
-
-                    if (recycle) Recycle(clone);
-                    _objectCount++;
+                    RegistrationPostProcess(clone);
                     _process.Completed -= Handler;
                 };
 
                 _process.Completed += Handler;
-
                 return await _process.Task;
-            }else
+            }
+            else
             {
                 Debug.LogWarning($"[{GetType().Name}] Pre-allocate limit reached! Please enable Dynamic pool if you want to keep creating instances even when limit is reached.");
                 return null;

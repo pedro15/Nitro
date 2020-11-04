@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   poolData:
   - Label: Ball8
-    referenceType: 2
+    referenceType: 3
     Prefab: {fileID: 0}
     assetReference:
       m_AssetGUID: 0f3389e84ceb5d544b144ed69a572657

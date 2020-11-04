@@ -26,6 +26,8 @@ namespace Nitro.Pooling
 
         private Dictionary<GameObject, string> ObjectPoolData = new Dictionary<GameObject, string>();
 
+
+
         private IEnumerator Start()
         {
             if (RegisterSingleton())
