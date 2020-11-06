@@ -17,12 +17,15 @@ namespace Nitro.Pooling
     {
         #region Fields
 
+        private int priority = 0;
+
+        public int Priority => priority;
+
         public string Label { get { return label; } }
 
         /// <summary>
         /// Object pool label
         /// </summary>
-        [SerializeField]
         private string label = default;
 
         /// <summary>
@@ -50,12 +53,10 @@ namespace Nitro.Pooling
         /// <summary>
         /// Object Pool Parent
         /// </summary>
-        [HideInInspector]
         private Transform PoolParent = default;
         /// <summary>
         /// Should a Object Pool Parent needs to be created if the default pool parent does not exists?
         /// </summary>
-        [SerializeField]
         private bool ForcePoolParent = true;
 
         public int PreAllocateCount => preAllocateCount;
@@ -66,11 +67,13 @@ namespace Nitro.Pooling
 
         private Dictionary<GameObject, IPoolCallbacks[]> Callbacksdb = new Dictionary<GameObject, IPoolCallbacks[]>();
 
+        private int _objectCount = 0;
+
         #endregion
 
 #if ADDRESSABLES_INSTALLED
         public RecycleBin(string _label, AssetReference _prefab, int _MaxItems, int _preallocateCount = 0,
-           Transform _parent = null, bool _forcePoolParent = true)
+           Transform _parent = null, bool _forcePoolParent = true , int _priority = 0)
         {
             label = _label;
             Prefab_ref = _prefab;
@@ -78,13 +81,14 @@ namespace Nitro.Pooling
             MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
+            priority = _priority;
 
             referenceType = PoolReferenceType.ASSET_REFERENCE;
-            Reset();
+            Dispose();
         }
 
         public RecycleBin(string _label, AssetLabelReference _prefab, int _MaxItems, int _preallocateCount = 0,
-           Transform _parent = null, bool _forcePoolParent = true)
+           Transform _parent = null, bool _forcePoolParent = true, int _priority = 0)
         {
             label = _label;
             Prefabs_label = _prefab;
@@ -92,13 +96,14 @@ namespace Nitro.Pooling
             MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
+            priority = _priority;
 
             referenceType = PoolReferenceType.LABEL_REFERENCE;
-            Reset();
+            Dispose();
         }
 #endif
         public RecycleBin(string _label, GameObject _prefab, int _MaxItems, int _preallocateCount = 0,
-            Transform _parent = null, bool _forcePoolParent = true)
+            Transform _parent = null, bool _forcePoolParent = true , int _priority = 0)
         {
             label = _label;
             Prefab = _prefab;
@@ -106,14 +111,14 @@ namespace Nitro.Pooling
             MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
+            priority = _priority;
 
             referenceType = PoolReferenceType.PREFAB;
-            Reset();
+            Dispose();
         }
 
         #region Public API 
 
-        private int _objectCount = 0;
 
         /// <summary>
         /// Returns the object pool size
@@ -151,11 +156,11 @@ namespace Nitro.Pooling
         }
 
         /// <summary>
-        /// Fills The objectPool
+        /// Allocates the object pool in memory
         /// </summary>
-        public IEnumerator FillPool(int count)
+        public IEnumerator Allocate(int count)
         {
-            if (PreAllocateCount > 0)
+            if (count > 0)
             {
 #if ADDRESSABLES_INSTALLED
                 bool done = false;
@@ -193,27 +198,13 @@ namespace Nitro.Pooling
 #else
                 yield return PoolManager.Instance.StartCoroutine(I_FillPool(count));
 #endif
+                yield break;
             }
         }
 
-        public IEnumerator FillPool()
+        public IEnumerator Allocate()
         {
-            yield return FillPool(PreAllocateCount);
-        }
-
-        /// <summary>
-        /// Resets the recycle bin to it's default values and Destroys the object pool
-        /// </summary>
-        public void Reset()
-        {
-            _objectCount = 0;
-            ClearRecycleBin(true);
-#if ADDRESSABLES_INSTALLED
-            prefab_locations.Clear();
-#endif
-            if (PooledObjects != null)
-                PooledObjects.Clear();
-            else PooledObjects = new Stack<GameObject>();
+            yield return Allocate(PreAllocateCount);
         }
 
         /// <summary>
@@ -225,21 +216,13 @@ namespace Nitro.Pooling
         {
             if (!go)
             {
-                Debug.LogWarning($"[{GetType().Name}] Trying to recycle an null object. ignoring...");
+                Debug.LogWarning($"[{GetType().Name}] Trying to recycle a null object. ignoring...");
                 return;
             }
 
-            if (go != null && !PooledObjects.Contains(go))
+            if (!PooledObjects.Contains(go))
             {
-                if (Callbacksdb.TryGetValue(go, out IPoolCallbacks[] callbacks))
-                {
-                    foreach (IPoolCallbacks poolCallbacks in callbacks)
-                        poolCallbacks.OnRecycle();
-                }else
-                {
-
-                }
-
+                InvokeCallbacks(go, (IPoolCallbacks cc) => cc.OnRecycle());
                 go.SetActive(false);
                 go.transform.position = Vector3.zero;
                 PooledObjects.Push(go);
@@ -289,7 +272,6 @@ namespace Nitro.Pooling
             {
 #if ADDRESSABLES_INSTALLED
                 Task<GameObject> go_process = Task.Run(() => RegisterPrefabAsync(false));
-
                 go_process.Wait();
                 GameObject other = go_process.Result;
 #else 
@@ -312,26 +294,46 @@ namespace Nitro.Pooling
         }
 
         /// <summary>
-        /// Clears the entrie recycle bin
+        /// Clears and resets the recycleBin to it's default values
         /// </summary>
         /// <param name="destroyObjects"></param>
-        public void ClearRecycleBin(bool destroyObjects = false)
+        public void Dispose(bool destroyObjects = false)
         {
             while (PooledObjects != null && PooledObjects.Count > 0)
             {
                 GameObject obj = PooledObjects.Pop();
                 if (destroyObjects)
                 {
+#if ADDRESSABLES_INSTALLED
+                    Addressables.ReleaseInstance(obj);
+#else
                     Object.Destroy(obj);
-                    _objectCount--;
+#endif
                 }
             }
+            
+            _objectCount = 0;
+            if (PooledObjects != null)
+                PooledObjects.Clear();
+            else PooledObjects = new Stack<GameObject>();
+            
             Callbacksdb.Clear();
+
+#if ADDRESSABLES_INSTALLED
+            if(prefab_locations.Count > 0)
+            {
+                for (int i = 0; i < prefab_locations.Count; i++)
+                {
+                    Addressables.Release(prefab_locations[i]);
+                }
+                prefab_locations.Clear();
+            }
+#endif
         }
 
-        #endregion
+#endregion
 
-        #region Private API 
+#region Private API 
 
         private void InvokeCallbacks(GameObject other, System.Action<IPoolCallbacks> invocation)
         {
@@ -447,7 +449,7 @@ namespace Nitro.Pooling
 
             if (ObjectCount < MaxItems || MaxItems <= 0)
             {
-                if (!PoolParent)
+                if (!PoolParent && ForcePoolParent)
                 {
                     PoolParent = new GameObject($"Pool :: {Label}").transform;
                     PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -493,12 +495,12 @@ namespace Nitro.Pooling
             }
             else
             {
-                Debug.LogWarning($"[{GetType().Name}] Pre-allocate limit reached! Please enable Dynamic pool if you want to keep creating instances even when limit is reached.");
+                Debug.LogWarning($"[{GetType().Name}] Pre-allocate limit reached! If you want to keep generating instances please enable Dinamic pool by set MaxItems to 0");
                 return null;
             }
         }
 #endif
-        #endregion
+#endregion
 
         public override bool Equals(object obj)
         {
@@ -514,7 +516,7 @@ namespace Nitro.Pooling
 
         public override int GetHashCode()
         {
-            return label.GetHashCode() + PreAllocateCount.GetHashCode() + 2;
+            return label.GetHashCode() + PreAllocateCount.GetHashCode() + 4;
         }
     }
 }

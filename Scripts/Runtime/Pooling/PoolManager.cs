@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
 using Nitro.Utility;
+using System.Linq;
 
 namespace Nitro.Pooling
 {
@@ -24,16 +25,14 @@ namespace Nitro.Pooling
 
         private Dictionary<string, RecycleBin> runtimeRecycleBins = new Dictionary<string, RecycleBin>();
 
-        private Dictionary<GameObject, string> ObjectPoolData = new Dictionary<GameObject, string>();
-
-
+        private Dictionary<int, string> ObjectPoolData = new Dictionary<int, string>();
 
         private IEnumerator Start()
         {
             if (RegisterSingleton())
             {
 
-                yield return new WaitForSeconds(5f);
+               // yield return new WaitForSeconds(5f);
 
                 Debug.Log("INIT! POOL !", this);
                 if (predefinedPool != null && predefinedPool.poolData.Length > 0)
@@ -60,17 +59,19 @@ namespace Nitro.Pooling
                         {
                             case PoolReferenceType.PREFAB:
                                 current = new RecycleBin(current_data.Label, current_data.Prefab, current_data.MaxItems,
-                                    current_data.PreallocateCount, null, current_data.UsePoolParent);
+                                    current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
                                 break;
 #if ADDRESSABLES_INSTALLED
                             case PoolReferenceType.ASSET_REFERENCE:
                                 current = new RecycleBin(current_data.Label, current_data.assetReference,
-                                    current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent);
+                                    current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent , 
+                                    current_data.Priority);
                                 break;
 
                             case PoolReferenceType.LABEL_REFERENCE:
                                 current = new RecycleBin(current_data.Label, current_data.assetlabelReference,
-                                    current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent);
+                                    current_data.MaxItems, current_data.PreallocateCount, null, current_data.UsePoolParent ,
+                                    current_data.Priority);
                                 break;
 #endif
                             default: goto case PoolReferenceType.PREFAB;
@@ -78,8 +79,8 @@ namespace Nitro.Pooling
 
                         runtimeRecycleBins.Add(current.Label, current);
                         Debug.Log("Init pool " + i);
-
-                        yield return current.FillPool();
+                        
+                        yield return current.Allocate();
 
                         Debug.Log($"Pool {current.Label} Initialization finished!");
                     }
@@ -100,8 +101,9 @@ namespace Nitro.Pooling
                 if (runtimeRecycleBins.TryGetValue(key , out Rb ))
                 {
                     GameObject clone = Rb.Spawn(position, rotation);
-                    if (clone != null && !ObjectPoolData.ContainsKey(clone))
-                        ObjectPoolData.Add(clone, key);
+                    int _id = clone.GetInstanceID();
+                    if (clone != null && !ObjectPoolData.ContainsKey(_id))
+                        ObjectPoolData.Add(_id, key);
 
                     return clone;
                 }
@@ -113,10 +115,65 @@ namespace Nitro.Pooling
             return null;
         }
 
+        public GameObject SpawnWeighted(Vector3 position, Quaternion rotation , params string[] ValidKeys)
+        {
+            int ChooseIndex(float[] probs)
+            {
+                float total = 0;
+
+                foreach (float elem in probs)
+                {
+                    total += elem;
+                }
+
+                float randomPoint = Random.value * total;
+
+                for (int i = 0; i < probs.Length; i++)
+                {
+                    if (randomPoint < probs[i])
+                    {
+                        return i;
+                    }
+                    else
+                    {
+                        randomPoint -= probs[i];
+                    }
+                }
+                return probs.Length - 1;
+            }
+
+            RecycleBin[] validBins = runtimeRecycleBins.Where((KeyValuePair<string, RecycleBin> recycleBinItem)
+                => ValidKeys.Any((string key) => key.Equals(recycleBinItem.Key))).
+                Select((KeyValuePair<string, RecycleBin> recycleBinItem) => recycleBinItem.Value).ToArray();
+
+            if (validBins == null || validBins.Length <= 0)
+            {
+                Debug.LogError($"[{GetType().Name}] No Valid ObjectPool found with the given keys.");
+                return null;
+            }
+
+            int[] priorities = validBins.Select((RecycleBin bb) => bb.Priority).ToArray();
+            int total_value = priorities.Sum();
+            float[] probabilities = priorities.Select((int priority) => (priority / (float)total_value)).ToArray();
+
+            RecycleBin selected_bin = validBins[ChooseIndex(probabilities)];
+
+            GameObject clone = selected_bin.Spawn(position, rotation);
+
+            Debug.Log("Spawned! from: " + selected_bin.Label);
+
+            int _id = clone.GetInstanceID();
+
+            if (clone != null && !ObjectPoolData.ContainsKey(_id))
+                ObjectPoolData.Add(_id, selected_bin.Label);
+
+            return clone;
+        }
+
         public void RecycleGameObject(GameObject obj)
         {
             string recycleBinIndex;
-            if (ObjectPoolData.TryGetValue(obj , out recycleBinIndex))
+            if (ObjectPoolData.TryGetValue(obj.GetInstanceID() , out recycleBinIndex))
             {
                 runtimeRecycleBins[recycleBinIndex].Recycle(obj);
             }
@@ -124,7 +181,7 @@ namespace Nitro.Pooling
 
         public bool IsOnObjectPool(GameObject obj)
         {
-            return ObjectPoolData.ContainsKey(obj);
+            return ObjectPoolData.ContainsKey(obj.GetInstanceID());
         }
 
         public RecycleBin GetRecycleBin(GameObject obj)
@@ -132,7 +189,7 @@ namespace Nitro.Pooling
             if (!obj) return null;
 
             string rid;
-            if (ObjectPoolData.TryGetValue(obj, out rid))
+            if (ObjectPoolData.TryGetValue(obj.GetInstanceID(), out rid))
                 return runtimeRecycleBins[rid];
 
             return null;
@@ -157,7 +214,7 @@ namespace Nitro.Pooling
                 
                 if(preallocateCount > 0)
                 {
-                    recycleBin.FillPool();
+                    StartCoroutine(recycleBin.Allocate());
                 }
 
                 runtimeRecycleBins.Add(objectPoolKey, recycleBin);
@@ -172,5 +229,6 @@ namespace Nitro.Pooling
         {
             return runtimeRecycleBins.ContainsKey(poolkey);
         }
+
     }
 }

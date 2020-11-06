@@ -35,6 +35,7 @@ namespace Nitro.Pooling
     public struct RecycleBinData
     {
         public string Label;
+        public int Priority;
         public PoolReferenceType referenceType;
         [Header("Reference")]
         public GameObject Prefab;
