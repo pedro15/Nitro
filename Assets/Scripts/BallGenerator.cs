@@ -21,6 +21,10 @@ namespace Nitro.Demo.ObjectPool
         private float SpawnTime = 0.15f;
         [SerializeField]
         private string PoolKey = default;
+        [SerializeField]
+        private string[] keys = default;
+
+        
 
         private IEnumerator Start()
         {
@@ -32,8 +36,11 @@ namespace Nitro.Demo.ObjectPool
                 Vector3 spawnpoint = Origin.position + new Vector3(circle.x * Random.Range(RadiusMin, RadiusMax), 0, circle.y
                     * Random.Range(RadiusMin, RadiusMax)) + Offset;
 
-                PoolManager.Instance.Spawn(PoolKey, spawnpoint, Quaternion.Euler(Random.insideUnitSphere * Random.Range(0, 360f)));
+                Quaternion rot = Quaternion.Euler(Random.insideUnitSphere * Random.Range(0, 360f));
 
+                //  PoolManager.Instance.Spawn(PoolKey, spawnpoint, rot );
+
+                PoolManager.Instance.SpawnWeighted(spawnpoint, rot, keys);
                 yield return new WaitForSeconds(SpawnTime);
             }
         }

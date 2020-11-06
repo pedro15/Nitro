@@ -30,14 +30,12 @@ namespace Nitro.Demo.ObjectPool
 
         public void OnSpawn()
         {
-            Debug.Log("OnSpawn! - " + GetInstanceID());
-            Vector3 scale = Vector3.Scale(transform.localScale, Vector3.one * 1.25f);            
+            Vector3 scale = Vector3.Scale(transform.localScale, Vector3.one * 1.07f);            
             transform.localScale = scale;
         }
 
         public void OnRecycle()
         {
-            Debug.Log("OnRecycle! - " + GetInstanceID());
             rb.velocity = Vector3.zero;
         }
     }

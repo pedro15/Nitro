@@ -18,7 +18,7 @@ namespace Nitro.Pooling
                 PoolManager.Instance.RecycleGameObject(go);
             else
             {
-                Debug.LogWarning($"[Nitro] {typeof(PoolManager).Name} is Null. Destroying the object instead of recycling it. " + 
+                Debug.LogWarning($"[Nitro] '{typeof(PoolManager).Name}' is Null. Destroying the object instead of recycling it.. " + 
                     $"Please Make sure that you have an instance of '{typeof(PoolManager).Name}' in your scene");
                 Object.Destroy(go);
             }
