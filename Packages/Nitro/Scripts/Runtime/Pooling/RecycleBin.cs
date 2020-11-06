@@ -29,11 +29,6 @@ namespace Nitro.Pooling
         private string label = default;
 
         /// <summary>
-        /// Pool Max. Items. 0 or less means Dynamic Pool. 
-        /// </summary>
-        public int MaxItems = 0;
-
-        /// <summary>
         /// How much elements must be allocated on initialization ?
         /// </summary>
         [SerializeField]
@@ -72,13 +67,12 @@ namespace Nitro.Pooling
         #endregion
 
 #if ADDRESSABLES_INSTALLED
-        public RecycleBin(string _label, AssetReference _prefab, int _MaxItems, int _preallocateCount = 0,
+        public RecycleBin(string _label, AssetReference _prefab, int _preallocateCount = 0,
            Transform _parent = null, bool _forcePoolParent = true , int _priority = 0)
         {
             label = _label;
             Prefab_ref = _prefab;
             PoolParent = _parent;
-            MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
             priority = _priority;
@@ -87,13 +81,12 @@ namespace Nitro.Pooling
             Dispose();
         }
 
-        public RecycleBin(string _label, AssetLabelReference _prefab, int _MaxItems, int _preallocateCount = 0,
+        public RecycleBin(string _label, AssetLabelReference _prefab, int _preallocateCount = 0,
            Transform _parent = null, bool _forcePoolParent = true, int _priority = 0)
         {
             label = _label;
             Prefabs_label = _prefab;
             PoolParent = _parent;
-            MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
             priority = _priority;
@@ -102,13 +95,12 @@ namespace Nitro.Pooling
             Dispose();
         }
 #endif
-        public RecycleBin(string _label, GameObject _prefab, int _MaxItems, int _preallocateCount = 0,
+        public RecycleBin(string _label, GameObject _prefab, int _preallocateCount = 0,
             Transform _parent = null, bool _forcePoolParent = true , int _priority = 0)
         {
             label = _label;
             Prefab = _prefab;
             PoolParent = _parent;
-            MaxItems = _MaxItems;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
             priority = _priority;
@@ -143,11 +135,8 @@ namespace Nitro.Pooling
                 var async_process = RegisterPrefabAsync();
                 do
                 {
-                    Debug.Log($"Prefab Created[{i}]: " + async_process.IsCompleted);
-                    yield return new WaitForEndOfFrame();
+                  yield return new WaitForEndOfFrame();
                 } while (!async_process.IsCompleted);
-
-                Debug.Log("Count: " + ObjectCount);
 #else
                 RegisterPrefab();
                 yield return new WaitForEndOfFrame();
@@ -177,7 +166,6 @@ namespace Nitro.Pooling
                     yield return new WaitUntil(() => load_process.IsDone);
 
                     done = true;
-
                 }
                 else if (referenceType == PoolReferenceType.ASSET_REFERENCE)
                 {
@@ -238,7 +226,7 @@ namespace Nitro.Pooling
         /// <returns>Returns a Gameobject if it is aviable, otherwise returns null</returns>
         public async Task<GameObject> SpawnAsync(Vector3 Position, Quaternion Rotation)
         {
-            if (PooledObjects.Count <= 0 && (MaxItems <= 0 || ObjectCount < MaxItems))
+            if (PooledObjects.Count <= 0)
             {
                 Task<GameObject> task = RegisterPrefabAsync();
                 await task;
@@ -268,7 +256,7 @@ namespace Nitro.Pooling
         /// <returns>Returns a Gameobject if it is aviable, otherwise returns null</returns>
         public GameObject Spawn(Vector3 Position, Quaternion Rotation)
         {
-            if (PooledObjects.Count <= 0 && (MaxItems <= 0 || ObjectCount < MaxItems))
+            if (PooledObjects.Count <= 0)
             {
 #if ADDRESSABLES_INSTALLED
                 Task<GameObject> go_process = Task.Run(() => RegisterPrefabAsync(false));
@@ -447,57 +435,49 @@ namespace Nitro.Pooling
                 default: goto case PoolReferenceType.PREFAB;
             }
 
-            if (ObjectCount < MaxItems || MaxItems <= 0)
+            if (!PoolParent && ForcePoolParent)
             {
-                if (!PoolParent && ForcePoolParent)
-                {
-                    PoolParent = new GameObject($"Pool :: {Label}").transform;
-                    PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-                    PoolParent.SetParent(PoolManager.Instance.transform);
-                }
+                PoolParent = new GameObject($"Pool :: {Label}").transform;
+                PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                PoolParent.SetParent(PoolManager.Instance.transform);
+            }
 
-                AsyncOperationHandle<GameObject> _process = default;
+            AsyncOperationHandle<GameObject> _process = default;
 
-                switch (referenceType)
-                {
-                    case PoolReferenceType.PREFAB:
-                        GameObject clone = Object.Instantiate(Prefab, Vector3.zero, Quaternion.identity);
-                        RegistrationPostProcess(clone);
-                        return clone;
-
-                    case PoolReferenceType.ASSET_REFERENCE:
-
-                        _process = Addressables.InstantiateAsync(Prefab_ref, Vector3.zero, Quaternion.identity);
-
-                        break;
-
-                    case PoolReferenceType.LABEL_REFERENCE:
-
-                        IResourceLocation key = prefab_locations[Random.Range(0, prefab_locations.Count)];
-
-                        _process = Addressables.InstantiateAsync(key, Vector3.zero, Quaternion.identity);
-
-                        break;
-                    default: goto case PoolReferenceType.PREFAB;
-                }
-
-                System.Action<AsyncOperationHandle<GameObject>> Handler = null;
-
-                Handler = (AsyncOperationHandle<GameObject> handle) =>
-                {
-                    GameObject clone = handle.Result;
+            switch (referenceType)
+            {
+                case PoolReferenceType.PREFAB:
+                    GameObject clone = Object.Instantiate(Prefab, Vector3.zero, Quaternion.identity);
                     RegistrationPostProcess(clone);
-                    _process.Completed -= Handler;
-                };
+                    return clone;
 
-                _process.Completed += Handler;
-                return await _process.Task;
+                case PoolReferenceType.ASSET_REFERENCE:
+
+                    _process = Addressables.InstantiateAsync(Prefab_ref, Vector3.zero, Quaternion.identity);
+
+                    break;
+
+                case PoolReferenceType.LABEL_REFERENCE:
+
+                    IResourceLocation key = prefab_locations[Random.Range(0, prefab_locations.Count)];
+
+                    _process = Addressables.InstantiateAsync(key, Vector3.zero, Quaternion.identity);
+
+                    break;
+                default: goto case PoolReferenceType.PREFAB;
             }
-            else
+
+            System.Action<AsyncOperationHandle<GameObject>> Handler = null;
+
+            Handler = (AsyncOperationHandle<GameObject> handle) =>
             {
-                Debug.LogWarning($"[{GetType().Name}] Pre-allocate limit reached! If you want to keep generating instances please enable Dinamic pool by set MaxItems to 0");
-                return null;
-            }
+                GameObject clone = handle.Result;
+                RegistrationPostProcess(clone);
+                _process.Completed -= Handler;
+            };
+
+            _process.Completed += Handler;
+            return await _process.Task;
         }
 #endif
 #endregion

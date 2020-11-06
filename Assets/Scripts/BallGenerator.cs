@@ -1,8 +1,5 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Threading.Tasks;
-using System.Threading;
 using Nitro.Pooling;
 
 namespace Nitro.Demo.ObjectPool
@@ -20,11 +17,7 @@ namespace Nitro.Demo.ObjectPool
         [SerializeField]
         private float SpawnTime = 0.15f;
         [SerializeField]
-        private string PoolKey = default;
-        [SerializeField]
         private string[] keys = default;
-
-        
 
         private IEnumerator Start()
         {

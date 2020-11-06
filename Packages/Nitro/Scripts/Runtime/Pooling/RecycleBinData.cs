@@ -44,7 +44,6 @@ namespace Nitro.Pooling
         public AssetLabelReference assetlabelReference;
 #endif
         [Header("General Settings")]
-        public int MaxItems;
         public int PreallocateCount;
         public bool UsePoolParent;
     }
