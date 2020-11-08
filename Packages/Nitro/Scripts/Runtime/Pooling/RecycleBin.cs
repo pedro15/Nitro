@@ -44,7 +44,7 @@ namespace Nitro.Pooling
         /// <summary>
         /// Object Pool Prefab
         /// </summary>
-        private GameObject Prefab = default;
+        private GameObject[] Prefabs = default;
         /// <summary>
         /// Object Pool Parent
         /// </summary>
@@ -95,11 +95,11 @@ namespace Nitro.Pooling
             Dispose();
         }
 #endif
-        public RecycleBin(string _label, GameObject _prefab, int _preallocateCount = 0,
+        public RecycleBin(string _label, GameObject[] _prefabs, int _preallocateCount = 0,
             Transform _parent = null, bool _forcePoolParent = true , int _priority = 0)
         {
             label = _label;
-            Prefab = _prefab;
+            Prefabs = _prefabs.Where((GameObject obj) => obj != null ).ToArray();
             PoolParent = _parent;
             preAllocateCount = _preallocateCount;
             ForcePoolParent = _forcePoolParent;
@@ -147,7 +147,7 @@ namespace Nitro.Pooling
         /// <summary>
         /// Allocates the object pool in memory
         /// </summary>
-        public IEnumerator Allocate(int count)
+        public IEnumerator Allocate(int count, System.Action OnFinish)
         {
             if (count > 0)
             {
@@ -184,15 +184,18 @@ namespace Nitro.Pooling
 
                 yield return I_FillPool(count);
 #else
-                yield return PoolManager.Instance.StartCoroutine(I_FillPool(count));
+                yield return I_FillPool(count);
 #endif
+
+                if (OnFinish != null) OnFinish.Invoke();
+
                 yield break;
             }
         }
 
-        public IEnumerator Allocate()
+        public IEnumerator Allocate(System.Action OnFinish = null)
         {
-            yield return Allocate(PreAllocateCount);
+            yield return Allocate(PreAllocateCount, OnFinish);
         }
 
         /// <summary>
@@ -410,7 +413,7 @@ namespace Nitro.Pooling
             {
                 case PoolReferenceType.PREFAB:
 
-                    if (!Prefab)
+                    if (Prefabs == null || Prefabs.Length == 0)
                     {
                         Debug.LogError($"[{GetType().Name}] Prefab is null on pool: '{Label}'");
                         return null;
@@ -447,7 +450,7 @@ namespace Nitro.Pooling
             switch (referenceType)
             {
                 case PoolReferenceType.PREFAB:
-                    GameObject clone = Object.Instantiate(Prefab, Vector3.zero, Quaternion.identity);
+                    GameObject clone = Object.Instantiate(Prefabs[Random.Range(0,Prefabs.Length)], Vector3.zero, Quaternion.identity);
                     RegistrationPostProcess(clone);
                     return clone;
 

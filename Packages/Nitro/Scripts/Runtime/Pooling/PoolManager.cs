@@ -32,9 +32,9 @@ namespace Nitro.Pooling
             if (RegisterSingleton())
             {
                 Debug.Log("INIT! POOL !", this);
-                if (predefinedPool != null && predefinedPool.poolData.Length > 0)
+                if (predefinedPool != null && predefinedPool.poolData.Count > 0)
                 {
-                    for (int i = 0; i < predefinedPool.poolData.Length; i++)
+                    for (int i = 0; i < predefinedPool.poolData.Count; i++)
                     {
                         var current_data = predefinedPool.poolData[i];
 
@@ -55,7 +55,7 @@ namespace Nitro.Pooling
                         switch (current_data.referenceType)
                         {
                             case PoolReferenceType.PREFAB:
-                                current = new RecycleBin(current_data.Label, current_data.Prefab,
+                                current = new RecycleBin(current_data.Label, current_data.Prefabs,
                                     current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
                                 break;
 #if ADDRESSABLES_INSTALLED
@@ -195,16 +195,16 @@ namespace Nitro.Pooling
             return null;
         }
 
-        public void CreateObjectPool(GameObject prefab, string objectPoolKey, int preallocateCount = 0, Transform parent = null,
+        public void CreateObjectPool(GameObject[] prefabs, string objectPoolKey, int preallocateCount = 0, Transform parent = null,
             bool forcePoolParent = true)
         {
             if (!ObjectPoolExists(objectPoolKey))
             {
-                RecycleBin recycleBin = new RecycleBin(objectPoolKey, prefab , preallocateCount , parent , forcePoolParent);
+                RecycleBin recycleBin = new RecycleBin(objectPoolKey, prefabs , preallocateCount , parent , forcePoolParent);
                 
                 if(preallocateCount > 0)
                 {
-                    StartCoroutine(recycleBin.Allocate());
+                   StartCoroutine(recycleBin.Allocate());
                 }
 
                 runtimeRecycleBins.Add(objectPoolKey, recycleBin);
