@@ -37,13 +37,11 @@ namespace Nitro.Pooling
         public string Label;
         public int Priority;
         public PoolReferenceType referenceType;
-        [Header("Reference")]
-        public GameObject Prefab;
+        public GameObject[] Prefabs;
 #if ADDRESSABLES_INSTALLED
         public AssetReference assetReference;
         public AssetLabelReference assetlabelReference;
 #endif
-        [Header("General Settings")]
         public int PreallocateCount;
         public bool UsePoolParent;
     }
