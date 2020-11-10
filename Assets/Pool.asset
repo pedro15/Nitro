@@ -13,49 +13,14 @@ MonoBehaviour:
   m_Name: Pool
   m_EditorClassIdentifier: 
   poolData:
-  - Label: Ball15
-    Priority: 6
-    referenceType: 2
-    Prefabs:
-    - {fileID: 0}
-    assetReference:
-      m_AssetGUID: 04ff6448757e72149a3ec7ec50d8d138
-      m_SubObjectName: 
-    assetlabelReference:
-      m_LabelString: balls
-    PreallocateCount: 100
-    UsePoolParent: 1
-  - Label: Ball14
-    Priority: 2
-    referenceType: 1
-    Prefabs:
-    - {fileID: 3883196372727784569, guid: 0e406a8b2a44861448e43516e4bf9205, type: 3}
-    assetReference:
-      m_AssetGUID: 0e406a8b2a44861448e43516e4bf9205
-      m_SubObjectName: 
-    assetlabelReference:
-      m_LabelString: balls
-    PreallocateCount: 100
-    UsePoolParent: 1
-  - Label: Ball12
-    Priority: 7
+  - Label: Balls
+    Priority: 1
     referenceType: 3
     Prefabs: []
     assetReference:
-      m_AssetGUID: 647144fa583565245ad52fa94ae13c0e
+      m_AssetGUID: 
       m_SubObjectName: 
     assetlabelReference:
       m_LabelString: balls
-    PreallocateCount: 100
+    PreallocateCount: 20
     UsePoolParent: 1
-  - Label: Ball8
-    Priority: 20
-    referenceType: 3
-    Prefabs: []
-    assetReference:
-      m_AssetGUID: 0f3389e84ceb5d544b144ed69a572657
-      m_SubObjectName: 
-    assetlabelReference:
-      m_LabelString: balls
-    PreallocateCount: 100
-    UsePoolParent: 0

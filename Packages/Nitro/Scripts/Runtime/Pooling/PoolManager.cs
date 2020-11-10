@@ -31,7 +31,6 @@ namespace Nitro.Pooling
         {
             if (RegisterSingleton())
             {
-                Debug.Log("INIT! POOL !", this);
                 if (predefinedPool != null && predefinedPool.poolData.Count > 0)
                 {
                     for (int i = 0; i < predefinedPool.poolData.Count; i++)

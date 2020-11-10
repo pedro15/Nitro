@@ -17,117 +17,15 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: d4945d9b1c011a24aad0f424cbeb4c9f
   m_SerializeEntries:
-  - m_GUID: 04ff6448757e72149a3ec7ec50d8d138
-    m_Address: 15
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 4078286990467606557, guid: 04ff6448757e72149a3ec7ec50d8d138,
-      type: 3}
-    m_TargetAsset: {fileID: 4078286990467606557, guid: 04ff6448757e72149a3ec7ec50d8d138,
-      type: 3}
-  - m_GUID: 0e406a8b2a44861448e43516e4bf9205
-    m_Address: Assets/Eight-ball Rack/Prefabs/14.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 3883196372727784569, guid: 0e406a8b2a44861448e43516e4bf9205,
-      type: 3}
-    m_TargetAsset: {fileID: 3883196372727784569, guid: 0e406a8b2a44861448e43516e4bf9205,
-      type: 3}
-  - m_GUID: 0e81012e354a6e14ea4c8eb883734f79
-    m_Address: Assets/Eight-ball Rack/Prefabs/6.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 0f3389e84ceb5d544b144ed69a572657
-    m_Address: 8
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 3276162867935402419, guid: 0f3389e84ceb5d544b144ed69a572657,
-      type: 3}
-    m_TargetAsset: {fileID: 3276162867935402419, guid: 0f3389e84ceb5d544b144ed69a572657,
-      type: 3}
-  - m_GUID: 155b184e61b20be42a532358a1679776
-    m_Address: Assets/Eight-ball Rack/Prefabs/7.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 647144fa583565245ad52fa94ae13c0e
-    m_Address: Assets/Eight-ball Rack/Prefabs/12.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 6acdfa6823078f147bc14a88920def69
-    m_Address: Assets/Eight-ball Rack/Prefabs/10.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 7ce394888ef870747804c2c1f3501284
-    m_Address: Assets/Eight-ball Rack/Prefabs/2.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
   - m_GUID: 8a6e57eb11ca99848ab61a3a605ce6a3
-    m_Address: Assets/Eight-ball Rack/Prefabs/1.prefab
+    m_Address: 1
     m_ReadOnly: 0
     m_SerializedLabels:
     - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 9477e12f81c8d3243bbcdc25c550aac4
-    m_Address: Assets/Eight-ball Rack/Prefabs/5.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: 9d1ba15dc875df3469bfb84baf69285d
-    m_Address: Assets/Eight-ball Rack/Prefabs/9.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: aa8c4f2de83442041b7b210dcf4b8ee2
-    m_Address: Assets/Eight-ball Rack/Prefabs/4.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: b538fbd5c14d0064f8e8dc725d210337
-    m_Address: Assets/Eight-ball Rack/Prefabs/13.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: c48e07d45fa7b674a94accf4d43a3238
-    m_Address: Assets/Eight-ball Rack/Prefabs/3.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
-  - m_GUID: f5718472a97cde64885ebf64123f326b
-    m_Address: Assets/Eight-ball Rack/Prefabs/11.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - balls
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
+    m_MainAsset: {fileID: 8038947450273744899, guid: 8a6e57eb11ca99848ab61a3a605ce6a3,
+      type: 3}
+    m_TargetAsset: {fileID: 8038947450273744899, guid: 8a6e57eb11ca99848ab61a3a605ce6a3,
+      type: 3}
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: ff2c73d7ff433cb4d93bbe4aaa78880b, type: 2}
   m_SchemaSet:

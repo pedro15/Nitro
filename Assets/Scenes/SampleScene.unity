@@ -561,13 +561,9 @@ MonoBehaviour:
   RadiusMin: 2.41
   RadiusMax: 8.19
   Offset: {x: 0, y: -1.49, z: 0}
-  SpawnTime: 1
-  PoolKey: Ball8
+  SpawnTime: 0.06
   keys:
-  - Ball8
-  - Ball15
-  - Ball12
-  - Ball14
+  - Balls
 --- !u!4 &1010476316
 Transform:
   m_ObjectHideFlags: 0

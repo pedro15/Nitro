@@ -66,5 +66,34 @@ namespace Nitro.Tests
 
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator TestPerformance2()
+        {
+            GameObject obj = new GameObject();
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+
+            bool is_null =  ReferenceEquals(obj, null);
+            
+            sw.Stop();
+
+            if (is_null) Assert.IsFalse(is_null);
+
+            Debug.Log("| ReferenceEquals(obj, null); | ->  Delay: " + sw.ElapsedTicks + " Ticks");
+
+            sw.Start();
+
+            bool is_null2 = !obj;
+
+            sw.Stop();
+
+            if (is_null2) Assert.IsFalse(is_null2);
+
+            Debug.Log("| !obj | -> Delay: " + sw.ElapsedTicks + " Ticks");
+
+            yield return null;
+        }
     }
 }

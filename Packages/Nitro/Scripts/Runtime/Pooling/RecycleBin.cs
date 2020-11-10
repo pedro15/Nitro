@@ -147,7 +147,7 @@ namespace Nitro.Pooling
         /// <summary>
         /// Allocates the object pool in memory
         /// </summary>
-        public IEnumerator Allocate(int count, System.Action OnFinish)
+        public IEnumerator Allocate(int count, System.Action OnFinish , System.Action<float>OnUpdate)
         {
             if (count > 0)
             {
@@ -157,13 +157,27 @@ namespace Nitro.Pooling
                 {
                     var load_resouces = Addressables.LoadResourceLocationsAsync(Prefabs_label.labelString, typeof(GameObject));
 
-                    yield return new WaitUntil(() => load_resouces.IsDone);
+                    yield return new WaitUntil(() =>
+                    {
+                        if (OnUpdate != null)
+                            OnUpdate.Invoke(load_resouces.PercentComplete / 2f);
+
+                        return load_resouces.IsDone;
+                    });
 
                     prefab_locations = load_resouces.Result.ToList();
 
                     var load_process = Addressables.LoadAssetsAsync<GameObject>(prefab_locations, null);
 
-                    yield return new WaitUntil(() => load_process.IsDone);
+                    yield return new WaitUntil(() =>
+                    {
+                        if (OnUpdate != null)
+                            OnUpdate.Invoke(50f + (load_process.PercentComplete / 2f));
+
+                        return load_process.IsDone;
+                    });
+
+                    Debug.Log(load_process.Result?.Count);
 
                     done = true;
                 }
@@ -186,16 +200,15 @@ namespace Nitro.Pooling
 #else
                 yield return I_FillPool(count);
 #endif
-
                 if (OnFinish != null) OnFinish.Invoke();
 
                 yield break;
             }
         }
 
-        public IEnumerator Allocate(System.Action OnFinish = null)
+        public IEnumerator Allocate(System.Action<float> OnUpdate = null, System.Action OnFinish = null)
         {
-            yield return Allocate(PreAllocateCount, OnFinish);
+            yield return Allocate(PreAllocateCount, OnFinish , OnUpdate);
         }
 
         /// <summary>
@@ -262,7 +275,7 @@ namespace Nitro.Pooling
             if (PooledObjects.Count <= 0)
             {
 #if ADDRESSABLES_INSTALLED
-                Task<GameObject> go_process = Task.Run(() => RegisterPrefabAsync(false));
+                Task<GameObject> go_process = RegisterPrefabAsync(false);
                 go_process.Wait();
                 GameObject other = go_process.Result;
 #else 
@@ -462,7 +475,7 @@ namespace Nitro.Pooling
 
                 case PoolReferenceType.LABEL_REFERENCE:
 
-                    IResourceLocation key = prefab_locations[Random.Range(0, prefab_locations.Count)];
+                    IResourceLocation key = prefab_locations[Random.Range(0,prefab_locations.Count)];
 
                     _process = Addressables.InstantiateAsync(key, Vector3.zero, Quaternion.identity);
 

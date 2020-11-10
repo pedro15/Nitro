@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: AddressableAssetSettings
   m_EditorClassIdentifier: 
   m_DefaultGroup: d4945d9b1c011a24aad0f424cbeb4c9f
-  m_BuildRemoteCatalog: 0
+  m_BuildRemoteCatalog: 1
   m_BundleLocalCatalog: 0
   m_DisableCatalogUpdateOnStart: 0
   m_UniqueBundleIds: 0
@@ -21,10 +21,11 @@ MonoBehaviour:
     m_Id: 5c392ef311666c94c84d7b07fe6c8525
   m_RemoteCatalogLoadPath:
     m_Id: 6cd21b8752349544cb64cf1f9e975b93
-  m_overridePlayerVersion: 
+  m_overridePlayerVersion: 2.5.1
   m_GroupAssets:
   - {fileID: 11400000, guid: 2506b33533b6a674194a359f613c6581, type: 2}
   - {fileID: 11400000, guid: 074594773f5e23a40a1372822c89ec85, type: 2}
+  - {fileID: 11400000, guid: bac3d1b61392dc54cb2ac1acfbd774ad, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -46,6 +47,20 @@ MonoBehaviour:
         m_Value: ServerData/[BuildTarget]
       - m_Id: 6cd21b8752349544cb64cf1f9e975b93
         m_Value: http://localhost/[BuildTarget]
+    - m_InheritedParent: 
+      m_Id: be0ae18fbd13a354388a841246af83d3
+      m_ProfileName: OnlineProfile
+      m_Values:
+      - m_Id: a62f8346e9eaa0a469ebf22a617b32d1
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 52317099e8e6b18489f5594431ce4cfc
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: b106668503b0d0040b9fd089275d06cb
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 5c392ef311666c94c84d7b07fe6c8525
+        m_Value: C:\wamp64\www\addressables\[BuildTarget]
+      - m_Id: 6cd21b8752349544cb64cf1f9e975b93
+        m_Value: http://localhost/addressables/[BuildTarget]
     m_ProfileEntryNames:
     - m_Id: a62f8346e9eaa0a469ebf22a617b32d1
       m_Name: BuildTarget
@@ -80,7 +95,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 921e73a982b004b438fff83f15723a90, type: 2}
   - {fileID: 11400000, guid: a394a1f4e3d9b554490457d062b90b1d, type: 2}
   - {fileID: 11400000, guid: 18397460ee7160f4dbed3b72453fb36c, type: 2}
-  m_ActiveProfileId: ec1bf6630d05c804a8f85aa7cdec2ccf
+  m_ActiveProfileId: be0ae18fbd13a354388a841246af83d3
   m_HostingServicesManager:
     m_HostingServiceInfos: []
     m_Settings: {fileID: 11400000}
