@@ -15,6 +15,14 @@ namespace Nitro.Pooling
     [System.Serializable]
     public sealed class RecycleBin
     {
+#if ADDRESSABLES_INSTALLED
+        public delegate void d_OnAddressablesLoading(float progress);
+        public event d_OnAddressablesLoading OnAddressablesLoading;
+#endif
+        public delegate void d_OnPreallocate();
+        public event d_OnPreallocate OnPreallocateBegin;
+        public event d_OnPreallocate OnPreallocateFinish;
+
         #region Fields
 
         private int priority = 0;
@@ -41,6 +49,7 @@ namespace Nitro.Pooling
         private AssetLabelReference Prefabs_label = default;
         private List<IResourceLocation> prefab_locations = new List<IResourceLocation>();
 #endif
+
         /// <summary>
         /// Object Pool Prefab
         /// </summary>
@@ -60,7 +69,7 @@ namespace Nitro.Pooling
         [System.NonSerialized]
         private Stack<GameObject> PooledObjects = new Stack<GameObject>();
 
-        private Dictionary<GameObject, IPoolCallbacks[]> Callbacksdb = new Dictionary<GameObject, IPoolCallbacks[]>();
+        private Dictionary<int, IPoolCallbacks[]> Callbacksdb = new Dictionary<int, IPoolCallbacks[]>();
 
         private int _objectCount = 0;
 
@@ -109,9 +118,6 @@ namespace Nitro.Pooling
             Dispose();
         }
 
-        #region Public API 
-
-
         /// <summary>
         /// Returns the object pool size
         /// </summary>
@@ -147,21 +153,25 @@ namespace Nitro.Pooling
         /// <summary>
         /// Allocates the object pool in memory
         /// </summary>
-        public IEnumerator Allocate(int count, System.Action OnFinish , System.Action<float>OnUpdate)
+        public IEnumerator Allocate(int count)
         {
             if (count > 0)
             {
 #if ADDRESSABLES_INSTALLED
+                if (OnPreallocateBegin != null) OnPreallocateBegin.Invoke();
+
                 bool done = false;
+                float progress = 0f;
                 if (referenceType == PoolReferenceType.LABEL_REFERENCE)
                 {
                     var load_resouces = Addressables.LoadResourceLocationsAsync(Prefabs_label.labelString, typeof(GameObject));
 
+
                     yield return new WaitUntil(() =>
                     {
-                        if (OnUpdate != null)
-                            OnUpdate.Invoke(load_resouces.PercentComplete / 2f);
-
+                        Debug.Log("[P1] -> " + load_resouces.PercentComplete);
+                        progress = Mathf.Lerp(progress, 50f, Mathf.InverseLerp(0, 0.5f, load_resouces.PercentComplete * 0.5f));
+                        if (OnAddressablesLoading != null) OnAddressablesLoading.Invoke(progress);
                         return load_resouces.IsDone;
                     });
 
@@ -171,13 +181,11 @@ namespace Nitro.Pooling
 
                     yield return new WaitUntil(() =>
                     {
-                        if (OnUpdate != null)
-                            OnUpdate.Invoke(50f + (load_process.PercentComplete / 2f));
-
+                        Debug.Log("[P2] ->" + load_resouces.PercentComplete);
+                        progress = Mathf.Lerp(progress, 100f, Mathf.InverseLerp(0, 1f, load_process.PercentComplete));
+                        if (OnAddressablesLoading != null) OnAddressablesLoading.Invoke(progress);
                         return load_process.IsDone;
                     });
-
-                    Debug.Log(load_process.Result?.Count);
 
                     done = true;
                 }
@@ -185,7 +193,12 @@ namespace Nitro.Pooling
                 {
                     var load_prefab = Addressables.LoadAssetAsync<GameObject>(Prefab_ref);
 
-                    yield return new WaitUntil(() => load_prefab.IsDone);
+                    yield return new WaitUntil(() =>
+                    {
+                        progress = Mathf.Lerp(progress, 100f, Mathf.InverseLerp(0, 1f, load_prefab.PercentComplete));
+                        if (OnAddressablesLoading != null) OnAddressablesLoading.Invoke(progress);
+                        return load_prefab.IsDone;
+                    });
 
                     done = true;
                 }
@@ -200,15 +213,15 @@ namespace Nitro.Pooling
 #else
                 yield return I_FillPool(count);
 #endif
-                if (OnFinish != null) OnFinish.Invoke();
+                if (OnPreallocateFinish != null) OnPreallocateFinish.Invoke();
 
                 yield break;
             }
         }
 
-        public IEnumerator Allocate(System.Action<float> OnUpdate = null, System.Action OnFinish = null)
+        public IEnumerator Allocate()
         {
-            yield return Allocate(PreAllocateCount, OnFinish , OnUpdate);
+            yield return Allocate(PreAllocateCount);
         }
 
         /// <summary>
@@ -335,13 +348,9 @@ namespace Nitro.Pooling
 #endif
         }
 
-#endregion
-
-#region Private API 
-
         private void InvokeCallbacks(GameObject other, System.Action<IPoolCallbacks> invocation)
         {
-            if (Callbacksdb.TryGetValue(other, out IPoolCallbacks[] callbacks))
+            if (Callbacksdb.TryGetValue(other.GetInstanceID(), out IPoolCallbacks[] callbacks))
             {
                 foreach (IPoolCallbacks poolCallbacks in callbacks)
                 {
@@ -352,11 +361,12 @@ namespace Nitro.Pooling
 
         private void AddToCallbacksIfQualifyed(GameObject obj)
         {
-            if (!obj) return;
+            if (ReferenceEquals(obj,null)) return;
 
             IPoolCallbacks[] callbacks = obj.GetComponents<IPoolCallbacks>();
-            if (callbacks != null && callbacks.Length > 0 && !Callbacksdb.ContainsKey(obj))
-                Callbacksdb.Add(obj, callbacks);
+            int id = obj.GetInstanceID();
+            if (callbacks != null && callbacks.Length > 0 && !Callbacksdb.ContainsKey(id))
+                Callbacksdb.Add(id, callbacks);
         }
 
         /// <summary>
@@ -496,7 +506,6 @@ namespace Nitro.Pooling
             return await _process.Task;
         }
 #endif
-#endregion
 
         public override bool Equals(object obj)
         {
