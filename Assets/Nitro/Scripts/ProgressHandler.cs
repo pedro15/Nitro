@@ -21,8 +21,8 @@ namespace Nitro.Demo.ObjectPool
             recycleBin = PoolManager.Instance.GetRecycleBin("Balls");
             Debug.Log("RecycleBin -> " + recycleBin?.GetType().Name);
             
-            if (recycleBin != null)
-                recycleBin.OnAddressablesLoading += RecycleBin_OnAddressablesLoading;
+            //if (recycleBin != null)
+            //    recycleBin.OnAddressablesLoading += RecycleBin_OnAddressablesLoading;
         }
 
         private void RecycleBin_OnAddressablesLoading(float progress)
@@ -32,8 +32,8 @@ namespace Nitro.Demo.ObjectPool
 
         private void OnDestroy()
         {
-            if (recycleBin != null)
-                recycleBin.OnAddressablesLoading -= RecycleBin_OnAddressablesLoading;
+            //if (recycleBin != null)
+            //    recycleBin.OnAddressablesLoading -= RecycleBin_OnAddressablesLoading;
         }
     }
 }

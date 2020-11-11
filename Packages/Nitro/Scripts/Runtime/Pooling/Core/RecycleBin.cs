@@ -157,9 +157,8 @@ namespace Nitro.Pooling
         {
             if (count > 0)
             {
-#if ADDRESSABLES_INSTALLED
                 if (OnPreallocateBegin != null) OnPreallocateBegin.Invoke();
-
+#if ADDRESSABLES_INSTALLED
                 bool done = false;
                 float progress = 0f;
                 if (referenceType == PoolReferenceType.LABEL_REFERENCE)
@@ -214,7 +213,6 @@ namespace Nitro.Pooling
                 yield return I_FillPool(count);
 #endif
                 if (OnPreallocateFinish != null) OnPreallocateFinish.Invoke();
-
                 yield break;
             }
         }
@@ -333,7 +331,6 @@ namespace Nitro.Pooling
             if (PooledObjects != null)
                 PooledObjects.Clear();
             else PooledObjects = new Stack<GameObject>();
-            
             Callbacksdb.Clear();
 
 #if ADDRESSABLES_INSTALLED
@@ -397,22 +394,20 @@ namespace Nitro.Pooling
         /// <returns>Prefab clone</returns>
         internal GameObject RegisterPrefab(bool recycle = true)
         {
-            if (Prefab != null && (ObjectCount < MaxItems || MaxItems <= 0) )
+            if (Prefabs != null && Prefabs.Length > 0)
             {
-                GameObject Clone = Object.Instantiate(Prefab, Vector3.zero, Quaternion.identity);
+                GameObject Clone = Object.Instantiate(Prefabs[Random.Range(0,Prefabs.Length)], Vector3.zero, Quaternion.identity);
 
-                if (PoolParent != null && PoolParent.gameObject.scene.IsValid())
+                if (!PoolParent && ForcePoolParent)
                 {
-                    Clone.transform.SetParent(PoolParent);
+                    PoolParent = new GameObject($"Pool :: {Label}").transform;
+                    PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                    PoolParent.SetParent(PoolManager.Instance.transform);
                 }
-                else
-                {
-                    PoolParent = (new GameObject(label + "-PoolParent")).transform;
-                    PoolParent.transform.SetParent(PoolManager.Instance.transform);
-                    Clone.transform.SetParent(PoolParent);
-                }
+                if (PoolParent != null) Clone.transform.SetParent(PoolParent);
                 if (recycle) Recycle(Clone);
                 _objectCount++;
+                AddToCallbacksIfQualifyed(Clone);
                 return Clone;
             }
             return null;
@@ -426,7 +421,7 @@ namespace Nitro.Pooling
         {
             void RegistrationPostProcess(GameObject clone)
             {
-                clone.transform.SetParent(PoolParent);
+                if (PoolParent != null) clone.transform.SetParent(PoolParent);
                 if (recycle) Recycle(clone);
                 _objectCount++;
                 AddToCallbacksIfQualifyed(clone);
