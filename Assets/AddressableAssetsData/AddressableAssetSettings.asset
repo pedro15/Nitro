@@ -60,7 +60,7 @@ MonoBehaviour:
       - m_Id: 5c392ef311666c94c84d7b07fe6c8525
         m_Value: C:\wamp64\www\addressables\[BuildTarget]
       - m_Id: 6cd21b8752349544cb64cf1f9e975b93
-        m_Value: http://localhost/addressables/[BuildTarget]
+        m_Value: http://192.168.1.100:8080/addressables/[BuildTarget]
     m_ProfileEntryNames:
     - m_Id: a62f8346e9eaa0a469ebf22a617b32d1
       m_Name: BuildTarget
@@ -99,6 +99,6 @@ MonoBehaviour:
   m_HostingServicesManager:
     m_HostingServiceInfos: []
     m_Settings: {fileID: 11400000}
-    m_NextInstanceId: 1
+    m_NextInstanceId: 2
     m_RegisteredServiceTypeRefs:
     - UnityEditor.AddressableAssets.HostingServices.HttpHostingService, Unity.Addressables.Editor

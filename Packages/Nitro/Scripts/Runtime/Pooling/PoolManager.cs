@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Nitro.Pooling
 {
-    [AddComponentMenu("Nitro/Object Pool/Pool Manager")]
+    [AddComponentMenu("Nitro/Object Pool/Pool Manager") , DefaultExecutionOrder(-50)]
     public class PoolManager : MonoSingleton<PoolManager>
     {
         public delegate void OnInitDelegate();
@@ -33,6 +33,10 @@ namespace Nitro.Pooling
             {
                 if (predefinedPool != null && predefinedPool.poolData.Count > 0)
                 {
+                    Debug.Log($"[{GetType().Name}] Initialization started");
+
+                    List<RecycleBin> tmp_recycleBins = new List<RecycleBin>();
+
                     for (int i = 0; i < predefinedPool.poolData.Count; i++)
                     {
                         var current_data = predefinedPool.poolData[i];
@@ -59,22 +63,27 @@ namespace Nitro.Pooling
                                 break;
 #if ADDRESSABLES_INSTALLED
                             case PoolReferenceType.ASSET_REFERENCE:
-                                current = new RecycleBin(current_data.Label, current_data.assetReference,current_data.PreallocateCount, 
-                                    null, current_data.UsePoolParent , current_data.Priority);
+                                current = new RecycleBin(current_data.Label, current_data.assetReference, current_data.PreallocateCount,
+                                    null, current_data.UsePoolParent, current_data.Priority);
                                 break;
 
                             case PoolReferenceType.LABEL_REFERENCE:
-                                current = new RecycleBin(current_data.Label, current_data.assetlabelReference, 
-                                    current_data.PreallocateCount, null, current_data.UsePoolParent,current_data.Priority);
+                                current = new RecycleBin(current_data.Label, current_data.assetlabelReference,
+                                    current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
                                 break;
 #endif
                             default: goto case PoolReferenceType.PREFAB;
                         }
 
                         runtimeRecycleBins.Add(current.Label, current);
-
-                        yield return current.Allocate();
+                        tmp_recycleBins.Add(current);
                     }
+
+                    for (int i = 0; i < tmp_recycleBins.Count; i++)
+                    {
+                        yield return tmp_recycleBins[i].Allocate();
+                    }
+                    tmp_recycleBins.Clear();
                 }
                 yield return new WaitForEndOfFrame();
                 Debug.Log($"[{GetType().Name}] Initialization finished");
@@ -82,8 +91,7 @@ namespace Nitro.Pooling
                 if (OnInit != null) OnInit.Invoke();
             }
         }
-
-
+        
         public GameObject Spawn(string key, Vector3 position, Quaternion rotation)
         {
             if (runtimeRecycleBins.ContainsKey(key))

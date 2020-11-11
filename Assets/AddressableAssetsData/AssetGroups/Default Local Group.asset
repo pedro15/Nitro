@@ -18,14 +18,12 @@ MonoBehaviour:
   m_GUID: d4945d9b1c011a24aad0f424cbeb4c9f
   m_SerializeEntries:
   - m_GUID: 8a6e57eb11ca99848ab61a3a605ce6a3
-    m_Address: 1
+    m_Address: Assets/Eight-ball Rack/Prefabs/1.prefab
     m_ReadOnly: 0
     m_SerializedLabels:
     - balls
-    m_MainAsset: {fileID: 8038947450273744899, guid: 8a6e57eb11ca99848ab61a3a605ce6a3,
-      type: 3}
-    m_TargetAsset: {fileID: 8038947450273744899, guid: 8a6e57eb11ca99848ab61a3a605ce6a3,
-      type: 3}
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: ff2c73d7ff433cb4d93bbe4aaa78880b, type: 2}
   m_SchemaSet:

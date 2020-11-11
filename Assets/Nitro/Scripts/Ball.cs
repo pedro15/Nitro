@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Nitro.Pooling;
 using UnityEngine;
-using Nitro.Pooling;
 
 namespace Nitro.Demo.ObjectPool
 {
@@ -28,11 +26,7 @@ namespace Nitro.Demo.ObjectPool
             if (_hits >= HitsToRecycle) gameObject.Recycle();
         }
 
-        public void OnSpawn()
-        {
-            Vector3 scale = Vector3.Scale(transform.localScale, Vector3.one * 1.07f);            
-            transform.localScale = scale;
-        }
+        public void OnSpawn() { }
 
         public void OnRecycle()
         {
