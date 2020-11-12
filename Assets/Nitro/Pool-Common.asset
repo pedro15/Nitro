@@ -15,7 +15,7 @@ MonoBehaviour:
   poolData:
   - Label: Balls
     Priority: 10
-    referenceType: 1
+    ReferenceType: 0
     Prefabs:
     - {fileID: 8038947450273744899, guid: 8a6e57eb11ca99848ab61a3a605ce6a3, type: 3}
     - {fileID: 7553545990724171225, guid: 7ce394888ef870747804c2c1f3501284, type: 3}
@@ -32,5 +32,10 @@ MonoBehaviour:
     - {fileID: 2015804652980109296, guid: b538fbd5c14d0064f8e8dc725d210337, type: 3}
     - {fileID: 3883196372727784569, guid: 0e406a8b2a44861448e43516e4bf9205, type: 3}
     - {fileID: 4078286990467606557, guid: 04ff6448757e72149a3ec7ec50d8d138, type: 3}
+    AssetReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+    AssetLabelReference:
+      m_LabelString: 
     PreallocateCount: 20
     UsePoolParent: 1

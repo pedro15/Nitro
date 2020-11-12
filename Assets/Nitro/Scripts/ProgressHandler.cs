@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Nitro.Pooling;
+using Nitro.Pooling.Core;
 
 namespace Nitro.Demo.ObjectPool
 {

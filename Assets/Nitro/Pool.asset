@@ -15,12 +15,22 @@ MonoBehaviour:
   poolData:
   - Label: Balls
     Priority: 1
-    referenceType: 3
-    Prefabs: []
-    assetReference:
+    ReferenceType: 2
+    Prefabs:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    AssetReference:
       m_AssetGUID: 
       m_SubObjectName: 
-    assetlabelReference:
+    AssetLabelReference:
       m_LabelString: balls
     PreallocateCount: 20
     UsePoolParent: 1

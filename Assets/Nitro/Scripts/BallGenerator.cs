@@ -18,10 +18,19 @@ namespace Nitro.Demo.ObjectPool
         private float SpawnTime = 0.15f;
         [SerializeField]
         private string[] keys = default;
-
         private IEnumerator Start()
         {
-            yield return new WaitUntil(() => PoolManager.Instance.IsInitialized);
+            bool isDone = false;
+            PoolManager.d_OnPoolDefinitionLoaded onDone = null;
+            onDone = () =>
+            {
+                isDone = true;
+                PoolManager.OnPoolDefinitionLoaded -= onDone;
+            };
+
+            PoolManager.OnPoolDefinitionLoaded += onDone;
+
+            yield return new WaitUntil(() => isDone);
 
             while(Application.isPlaying)
             {

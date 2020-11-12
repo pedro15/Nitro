@@ -10,7 +10,7 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.AsyncOperations;
 #endif
 
-namespace Nitro.Pooling
+namespace Nitro.Pooling.Core
 {
     [System.Serializable]
     public sealed class RecycleBin
@@ -139,10 +139,9 @@ namespace Nitro.Pooling
             {
 #if ADDRESSABLES_INSTALLED
                 var async_process = RegisterPrefabAsync();
-                do
-                {
-                  yield return new WaitForEndOfFrame();
-                } while (!async_process.IsCompleted);
+
+                while (!async_process.IsCompleted)
+                    yield return new WaitForEndOfFrame();
 #else
                 RegisterPrefab();
                 yield return new WaitForEndOfFrame();
@@ -165,10 +164,8 @@ namespace Nitro.Pooling
                 {
                     var load_resouces = Addressables.LoadResourceLocationsAsync(Prefabs_label.labelString, typeof(GameObject));
 
-
                     yield return new WaitUntil(() =>
                     {
-                        Debug.Log("[P1] -> " + load_resouces.PercentComplete);
                         progress = Mathf.Lerp(progress, 50f, Mathf.InverseLerp(0, 0.5f, load_resouces.PercentComplete * 0.5f));
                         if (OnAddressablesLoading != null) OnAddressablesLoading.Invoke(progress);
                         return load_resouces.IsDone;
@@ -180,7 +177,6 @@ namespace Nitro.Pooling
 
                     yield return new WaitUntil(() =>
                     {
-                        Debug.Log("[P2] ->" + load_resouces.PercentComplete);
                         progress = Mathf.Lerp(progress, 100f, Mathf.InverseLerp(0, 1f, load_process.PercentComplete));
                         if (OnAddressablesLoading != null) OnAddressablesLoading.Invoke(progress);
                         return load_process.IsDone;
@@ -229,7 +225,7 @@ namespace Nitro.Pooling
 
         public void Recycle(GameObject go)
         {
-            if (!go)
+            if (ReferenceEquals(go ,null))
             {
                 Debug.LogWarning($"[{GetType().Name}] Trying to recycle a null object. ignoring...");
                 return;
@@ -292,7 +288,7 @@ namespace Nitro.Pooling
 #else 
                 GameObject other = RegisterPrefab(false);
 #endif
-                if (other != null)
+                if (!ReferenceEquals(other , null))
                 {
                     other.transform.SetPositionAndRotation(Position, Rotation);
 
@@ -398,13 +394,13 @@ namespace Nitro.Pooling
             {
                 GameObject Clone = Object.Instantiate(Prefabs[Random.Range(0,Prefabs.Length)], Vector3.zero, Quaternion.identity);
 
-                if (!PoolParent && ForcePoolParent)
+                if (ReferenceEquals(PoolParent,null) && ForcePoolParent)
                 {
                     PoolParent = new GameObject($"Pool :: {Label}").transform;
                     PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
                     PoolParent.SetParent(PoolManager.Instance.transform);
                 }
-                if (PoolParent != null) Clone.transform.SetParent(PoolParent);
+                if (!ReferenceEquals(PoolParent,null)) Clone.transform.SetParent(PoolParent);
                 if (recycle) Recycle(Clone);
                 _objectCount++;
                 AddToCallbacksIfQualifyed(Clone);
@@ -421,7 +417,7 @@ namespace Nitro.Pooling
         {
             void RegistrationPostProcess(GameObject clone)
             {
-                if (PoolParent != null) clone.transform.SetParent(PoolParent);
+                if (!ReferenceEquals(PoolParent,null)) clone.transform.SetParent(PoolParent);
                 if (recycle) Recycle(clone);
                 _objectCount++;
                 AddToCallbacksIfQualifyed(clone);
@@ -447,7 +443,7 @@ namespace Nitro.Pooling
 
                 case PoolReferenceType.LABEL_REFERENCE:
 
-                    if (!Prefabs_label.RuntimeKeyIsValid())
+                    if (!Prefabs_label.RuntimeKeyIsValid() || (prefab_locations == null || prefab_locations.Count <= 0))
                     {
                         Debug.LogError($"[{GetType().Name}] Asset label reference does not cotain any valid key on pool: {label}");
                         return null;
@@ -456,7 +452,7 @@ namespace Nitro.Pooling
                 default: goto case PoolReferenceType.PREFAB;
             }
 
-            if (!PoolParent && ForcePoolParent)
+            if (ReferenceEquals(PoolParent,null) && ForcePoolParent)
             {
                 PoolParent = new GameObject($"Pool :: {Label}").transform;
                 PoolParent.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -504,7 +500,7 @@ namespace Nitro.Pooling
 
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
+            if (ReferenceEquals(obj, null)) return false;
 
             if (obj is RecycleBin)
             {

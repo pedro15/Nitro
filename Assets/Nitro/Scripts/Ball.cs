@@ -15,7 +15,11 @@ namespace Nitro.Demo.ObjectPool
         private void OnEnable()
         {
             _hits = 0;
-            if (!rb) rb = GetComponent<Rigidbody>();
+            if (!rb)
+            {
+                rb = GetComponent<Rigidbody>();
+                rb.velocity = Vector3.zero;
+            }
         }
 
         private void OnCollisionEnter(Collision collision)

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditorInternal;
 using UnityEditor;
-using Nitro.Pooling;
+using Nitro.Pooling.Core;
 
 namespace NitroEditor
 {
@@ -22,15 +22,37 @@ namespace NitroEditor
                 EditorGUI.LabelField(r, "Object Pools");
             };
 
+            m_list.onAddCallback = (ReorderableList list) =>
+            {
+                int index = poolData.arraySize;
+                poolData.InsertArrayElementAtIndex(index);
+                SerializedProperty current = poolData.GetArrayElementAtIndex(index);
+
+                SerializedProperty Label = current.FindPropertyRelative("Label");
+                SerializedProperty Priority = current.FindPropertyRelative("Priority");
+                SerializedProperty referenceType = current.FindPropertyRelative("ReferenceType");
+                SerializedProperty Prefab = current.FindPropertyRelative("Prefabs");
+                SerializedProperty PreallocateCount = current.FindPropertyRelative("PreallocateCount");
+                SerializedProperty UsePoolParent = current.FindPropertyRelative("UsePoolParent");
+
+                Label.stringValue = string.Empty;
+                Priority.intValue = 0;
+                referenceType.intValue = 0;
+                Prefab.ClearArray();
+                PreallocateCount.intValue = 0;
+                UsePoolParent.boolValue = false;
+            };
+
             m_list.elementHeightCallback = (int index) =>
             {
                 SerializedProperty current = poolData.GetArrayElementAtIndex(index);
 
                 SerializedProperty Prefab = current.FindPropertyRelative("Prefabs");
 
-                SerializedProperty referenceType = current.FindPropertyRelative("referenceType");
+                SerializedProperty referenceType = current.FindPropertyRelative("ReferenceType");
 
                 PoolReferenceType m_type = (PoolReferenceType)referenceType.intValue;
+
 
                 if (m_type == PoolReferenceType.PREFAB)
                 {
@@ -59,7 +81,7 @@ namespace NitroEditor
 
                 SerializedProperty Label = current.FindPropertyRelative("Label");
                 SerializedProperty Priority = current.FindPropertyRelative("Priority");
-                SerializedProperty referenceType = current.FindPropertyRelative("referenceType");
+                SerializedProperty referenceType = current.FindPropertyRelative("ReferenceType");
                 SerializedProperty Prefab = current.FindPropertyRelative("Prefabs");
                 SerializedProperty PreallocateCount = current.FindPropertyRelative("PreallocateCount");
                 SerializedProperty UsePoolParent = current.FindPropertyRelative("UsePoolParent");
@@ -96,11 +118,11 @@ namespace NitroEditor
 
 #if ADDRESSABLES_INSTALLED
                         case PoolReferenceType.LABEL_REFERENCE:
-                            SerializedProperty assetlabelReference = current.FindPropertyRelative("assetlabelReference");
+                            SerializedProperty assetlabelReference = current.FindPropertyRelative("AssetLabelReference");
                             r_type = DrawControlRect(assetlabelReference, r_poolparent);
                             break;
                         case PoolReferenceType.ASSET_REFERENCE:
-                            SerializedProperty assetReference = current.FindPropertyRelative("assetReference");
+                            SerializedProperty assetReference = current.FindPropertyRelative("AssetReference");
                             r_type = DrawControlRect(assetReference, r_poolparent);
                             break;
 #endif

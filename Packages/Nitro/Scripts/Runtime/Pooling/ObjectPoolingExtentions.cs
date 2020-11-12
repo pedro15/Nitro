@@ -1,4 +1,5 @@
 using UnityEngine;
+using Nitro.Pooling.Core;
 
 namespace Nitro.Pooling
 {
