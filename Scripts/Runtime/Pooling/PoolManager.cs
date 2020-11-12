@@ -1,17 +1,18 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using Nitro.Utility;
 using System.Linq;
+
+using Nitro.Pooling.Core;
+using Nitro.Utility;
 
 namespace Nitro.Pooling
 {
     [AddComponentMenu("Nitro/Object Pool/Pool Manager") , DefaultExecutionOrder(-50)]
     public class PoolManager : MonoSingleton<PoolManager>
     {
-        public delegate void OnInitDelegate();
-
-        public static event OnInitDelegate OnInit;
+        public delegate void d_OnPoolDefinitionLoaded();
+        public static event d_OnPoolDefinitionLoaded OnPoolDefinitionLoaded;
 
         [SerializeField]
         private bool persistent = false;
@@ -21,75 +22,95 @@ namespace Nitro.Pooling
         [SerializeField]
         private PoolDefinition predefinedPool = default;
 
-        public bool IsInitialized { get; private set; } = false;
-
         private Dictionary<string, RecycleBin> runtimeRecycleBins = new Dictionary<string, RecycleBin>();
 
         private Dictionary<int, string> ObjectPoolData = new Dictionary<int, string>();
 
-        private IEnumerator Start()
+        private void Start()
         {
-            if (RegisterSingleton())
+            if (ValidateSingleton())
             {
-                if (predefinedPool != null && predefinedPool.poolData.Count > 0)
-                {
-                    Debug.Log($"[{GetType().Name}] Initialization started");
-
-                    List<RecycleBin> tmp_recycleBins = new List<RecycleBin>();
-
-                    for (int i = 0; i < predefinedPool.poolData.Count; i++)
-                    {
-                        var current_data = predefinedPool.poolData[i];
-
-                        if (string.IsNullOrEmpty(current_data.Label))
-                        {
-                            Debug.LogWarning($"[{GetType().Name}] Pool With null label detected at position {i}. Ignoring...");
-                            continue;
-                        }
-
-                        if (runtimeRecycleBins.ContainsKey(current_data.Label))
-                        {
-                            Debug.LogWarning($"[{GetType().Name}] A Pool already Exists with label '{current_data.Label}'. Ignoring...'");
-                            continue;
-                        }
-
-                        RecycleBin current = null;
-
-                        switch (current_data.referenceType)
-                        {
-                            case PoolReferenceType.PREFAB:
-                                current = new RecycleBin(current_data.Label, current_data.Prefabs,
-                                    current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
-                                break;
-#if ADDRESSABLES_INSTALLED
-                            case PoolReferenceType.ASSET_REFERENCE:
-                                current = new RecycleBin(current_data.Label, current_data.assetReference, current_data.PreallocateCount,
-                                    null, current_data.UsePoolParent, current_data.Priority);
-                                break;
-
-                            case PoolReferenceType.LABEL_REFERENCE:
-                                current = new RecycleBin(current_data.Label, current_data.assetlabelReference,
-                                    current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
-                                break;
-#endif
-                            default: goto case PoolReferenceType.PREFAB;
-                        }
-
-                        runtimeRecycleBins.Add(current.Label, current);
-                        tmp_recycleBins.Add(current);
-                    }
-
-                    for (int i = 0; i < tmp_recycleBins.Count; i++)
-                    {
-                        yield return tmp_recycleBins[i].Allocate();
-                    }
-                    tmp_recycleBins.Clear();
-                }
-                yield return new WaitForEndOfFrame();
-                Debug.Log($"[{GetType().Name}] Initialization finished");
-                IsInitialized = true;
-                if (OnInit != null) OnInit.Invoke();
+                LoadPooldefinition(predefinedPool);
             }
+        }
+
+        /// <summary>
+        /// Loads pool definition asset and preloads pool into memory
+        /// </summary>
+        /// <param name="definition">Pool definition asset</param>
+        /// <param name="Override">Should destroy current Object Pool data before load?</param>
+        public void LoadPooldefinition(PoolDefinition definition , bool Override = false)
+        {
+            if (Override)
+            {
+                foreach (RecycleBin recycleBin in runtimeRecycleBins.Values)
+                    recycleBin.Dispose(true);
+
+                runtimeRecycleBins.Clear();
+                ObjectPoolData.Clear();
+            }
+            StartCoroutine(I_LoadDefinition(definition));
+        }
+
+        private IEnumerator I_LoadDefinition(PoolDefinition definition)
+        {
+            if (definition != null && definition.PoolData.Length > 0)
+            {
+                RecycleBinData[] poolData = definition.PoolData;
+                Debug.Log($"[{GetType().Name}] Load PoolDefinition Started");
+
+                List<RecycleBin> tmp_recycleBins = new List<RecycleBin>();
+
+                for (int i = 0; i < poolData.Length; i++)
+                {
+                    var current_data = poolData[i];
+                    if (string.IsNullOrEmpty(current_data.Label))
+                    {
+                        Debug.LogWarning($"[{GetType().Name}] Pool With null label detected at position {i}. Ignoring...");
+                        continue;
+                    }
+
+                    if (runtimeRecycleBins.ContainsKey(current_data.Label))
+                    {
+                        Debug.LogWarning($"[{GetType().Name}] A Pool already Exists with label '{current_data.Label}'. Ignoring...'");
+                        continue;
+                    }
+
+                    RecycleBin current = null;
+
+                    switch (current_data.ReferenceType)
+                    {
+                        case PoolReferenceType.PREFAB:
+                            current = new RecycleBin(current_data.Label, current_data.Prefabs,
+                                current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
+                            break;
+#if ADDRESSABLES_INSTALLED
+                        case PoolReferenceType.ASSET_REFERENCE:
+                            current = new RecycleBin(current_data.Label, current_data.AssetReference, current_data.PreallocateCount,
+                                null, current_data.UsePoolParent, current_data.Priority);
+                            break;
+
+                        case PoolReferenceType.LABEL_REFERENCE:
+                            current = new RecycleBin(current_data.Label, current_data.AssetLabelReference,
+                                current_data.PreallocateCount, null, current_data.UsePoolParent, current_data.Priority);
+                            break;
+#endif
+                        default: goto case PoolReferenceType.PREFAB;
+                    }
+
+                    runtimeRecycleBins.Add(current.Label, current);
+                    tmp_recycleBins.Add(current);
+                }
+
+                for (int i = 0; i < tmp_recycleBins.Count; i++)
+                {
+                    yield return tmp_recycleBins[i].Allocate();
+                }
+                tmp_recycleBins.Clear();
+            }
+            yield return new WaitForEndOfFrame();
+            Debug.Log($"[{GetType().Name}] Load PoolDefinition finished");
+            if (OnPoolDefinitionLoaded != null) OnPoolDefinitionLoaded.Invoke();
         }
         
         public GameObject Spawn(string key, Vector3 position, Quaternion rotation)
@@ -159,10 +180,13 @@ namespace Nitro.Pooling
 
             GameObject clone = selected_bin.Spawn(position, rotation);
 
-            int _id = clone.GetInstanceID();
+            if (clone != null )
+            {
+                int _id = clone.GetInstanceID();
 
-            if (clone != null && !ObjectPoolData.ContainsKey(_id))
-                ObjectPoolData.Add(_id, selected_bin.Label);
+                if (!ObjectPoolData.ContainsKey(_id))
+                    ObjectPoolData.Add(_id, selected_bin.Label);
+            }
 
             return clone;
         }
