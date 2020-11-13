@@ -2,8 +2,7 @@
     "name": "NitroEditor",
     "references": [
         "Nitro",
-        "Unity.Addressables",
-        "Unity.ResourceManager"
+        "Unity.Addressables"
     ],
     "includePlatforms": [
         "Editor"
