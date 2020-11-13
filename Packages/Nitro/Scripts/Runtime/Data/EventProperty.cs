@@ -3,6 +3,7 @@
     [System.Serializable]
     public struct EventProperty<T>
     {
+        [UnityEngine.SerializeField]
         private T m_value;
 
         public System.Action<T> OnChange;
@@ -29,6 +30,16 @@
         public static implicit operator T(EventProperty<T> d)
         {
             return d.GetValue();
+        }
+
+        public override string ToString()
+        {
+            return m_value?.ToString();
+        }
+
+        public override int GetHashCode()
+        {
+            return m_value.GetHashCode();
         }
     }
 }

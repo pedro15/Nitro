@@ -9,8 +9,11 @@ namespace Nitro.Utility
     /// <typeparam name="T">Class</typeparam>
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
-        private static T eInstance;
+        private static T eInstance = null;
 
+        /// <summary>
+        /// Should this singleton be persistent Between scenes?
+        /// </summary>
         protected virtual bool Persistent
         {
             get { return false; }
@@ -29,7 +32,11 @@ namespace Nitro.Utility
                         SingletonPrefabAttribute m_prefab = typeof(T).GetCustomAttribute<SingletonPrefabAttribute>(true);
                         if (m_prefab != null && !string.IsNullOrEmpty(m_prefab.PrefabPath))
                         {
-                            eInstance = Instantiate(Resources.Load<GameObject>(m_prefab.PrefabPath)).GetComponent<T>();
+                            try
+                            {
+                                eInstance = Instantiate(Resources.Load<GameObject>(m_prefab.PrefabPath)).GetComponent<T>();
+                            }
+                            catch { }
                         }
                     }
                 }
@@ -37,19 +44,26 @@ namespace Nitro.Utility
             }
         }
 
-        protected virtual void Awake()
+        /// <summary>
+        /// Validate and initializes singleton Instance
+        /// </summary>
+        /// <returns>True if the singleton instance is valid</returns>
+        protected virtual bool ValidateSingleton()
         {
             if (Instance != null && Instance != this)
             {
                 Destroy(this);
+                return false;
             }
 
             if (Persistent)
             {
                 DontDestroyOnLoad(gameObject);
             }
-            eInstance = GetComponent<T>();
-        }
 
+            eInstance = this as T;
+
+            return true;
+        }
     }
 }

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6786bc68f205a34faf6a5013c750a25, type: 3}
+  m_Name: Pool
+  m_EditorClassIdentifier: 
+  poolData:
+  - Label: Balls
+    Priority: 1
+    ReferenceType: 2
+    Prefabs:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    AssetReference:
+      m_AssetGUID: 
+      m_SubObjectName: 
+    AssetLabelReference:
+      m_LabelString: balls
+    PreallocateCount: 20
+    UsePoolParent: 1
