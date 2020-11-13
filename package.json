@@ -1,7 +1,7 @@
 {
   "displayName": "Nitro",
   "category": "Utility",
-  "description": "Boost your game development with Nitro libraries.",
+  "description": "Utility Framework that makes your game development easier:\n\nContains utility modules for:\n- Serialization/Encryption\n- Object Pooling\n- Singleton Pattern \n- and more...",
   "author": {
     "name": "Pedro Duran"
   },
@@ -20,6 +20,6 @@
     "url": "https://github.com/pedro15/Nitro.git"
   },
   "unity": "2018.4",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "type": "library"
 }
